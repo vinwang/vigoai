@@ -23,7 +23,8 @@ AI漫导是一款基于 Flutter 开发的移动应用，采用 **AI 智能体架
 ✅ 完成！
 ```
 
-![](https://cdn.canghecode.com/blog/d82ef8a6d34fa0bcd71636ae2e931e28.jpg)
+![](/images/d82ef8a6d34fa0bcd71636ae2e931e28.jpg)
+
 
 我总结了一下大概的流程是这样子的：
 
