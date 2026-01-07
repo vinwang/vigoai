@@ -9,6 +9,7 @@
 .history
 .svn/
 .swiftpm/
+.spec-workflow/
 
 # IntelliJ / Android Studio
 *.iml

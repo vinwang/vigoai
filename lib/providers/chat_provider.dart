@@ -85,7 +85,10 @@ class ChatProvider extends ChangeNotifier {
 
     // 从 ConversationProvider 恢复历史消息
     if (provider != null) {
-      _messages.clear(); // 无论是否有历史消息，先清空
+      // 重置所有状态，防止上个会话的状态残留
+      _messages.clear();
+      _currentDraft = null;
+      _screenplayController.reset();
 
       if (provider.currentMessages.isNotEmpty) {
         // 将 ConversationMessage 转换为 ChatMessage
@@ -232,6 +235,12 @@ class ChatProvider extends ChangeNotifier {
       if (existingIndex >= 0) {
         _messages[existingIndex] =
             _messages[existingIndex].updateScreenplay(screenplay);
+
+        // 关键：同时更新到持久化存储（确保生成的视频URL被保存）
+        if (_conversationProvider != null) {
+          _conversationProvider!
+              .updateMessageFromChat(_messages[existingIndex]);
+        }
       } else {
         _addMessage(ChatMessage.screenplay(screenplay));
       }
@@ -275,7 +284,9 @@ class ChatProvider extends ChangeNotifier {
       '帮我生成',
       '创建视频',
       '开始生成',
+      '马上开始',
       'create video',
+      'start'
     ];
     return videoKeywords.any((keyword) => lowerMessage.contains(keyword));
   }

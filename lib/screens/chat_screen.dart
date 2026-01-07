@@ -260,7 +260,9 @@ class _ChatScreenState extends State<ChatScreen> {
       '帮我生成',
       '创建视频',
       '开始生成',
+      '马上开始',
       'create video',
+      'start'
     ];
     return videoKeywords.any((keyword) => lowerMessage.contains(keyword));
   }

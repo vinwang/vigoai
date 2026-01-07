@@ -308,7 +308,7 @@ class ScreenplayController {
             imageUrls: referenceUrls,
             prompt: scenePrompt,
             seconds: '5',
-            model: 'veo3.1-components',
+            model: ApiConfig.videoModel,
             sanitizePrompt: true, // 净化提示词，移除敏感词
           );
 
@@ -559,7 +559,7 @@ class ScreenplayController {
         imageUrls: referenceUrls,
         prompt: scenePrompt,
         seconds: '5',
-        model: 'veo3.1-components',
+        model: ApiConfig.videoModel,
       );
 
       // 等待视频生成完成
@@ -1078,6 +1078,14 @@ $characterAnalysis
       status: status,
       timestamp: DateTime.now(),
     ));
+  }
+
+  /// 重置控制器状态
+  void reset() {
+    _currentScreenplay = null;
+    _userOriginalImages = null;
+    _characterReferenceUrls = null;
+    _isCancelled = false;
   }
 
   /// 释放资源

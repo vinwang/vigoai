@@ -207,6 +207,51 @@ class ConversationProvider extends ChangeNotifier {
     }
   }
 
+  /// 使用 ChatMessage 更新完整消息（包括 Metadata）
+  /// 用于同步剧本生成进度、视频URL等
+  Future<void> updateMessageFromChat(chat.ChatMessage chatMessage) async {
+    if (_currentConversation == null) return;
+
+    final index = _currentMessages.indexWhere((m) => m.id == chatMessage.id);
+    if (index == -1) return;
+
+    final oldMessage = _currentMessages[index];
+
+    // 构建 metadata
+    final metadata = <String, dynamic>{
+      if (chatMessage.mediaUrl != null) 'mediaUrl': chatMessage.mediaUrl,
+      if (chatMessage.screenplay != null)
+        'screenplay': chatMessage.screenplay!.toJson(),
+      if (chatMessage.screenplay != null)
+        'screenplayTaskId': chatMessage.screenplay!.taskId,
+      if (chatMessage.draft != null) 'draft': chatMessage.draft!.toJson(),
+    };
+
+    // 创建更新后的消息对象
+    final updatedMessage = oldMessage.copyWith(
+      content: chatMessage.content,
+      type: _convertMessageType(chatMessage.type),
+      metadata: metadata.isNotEmpty ? metadata : null,
+    );
+
+    // 更新 Hive 数据库
+    await _hive.updateMessage(updatedMessage);
+
+    // 更新内存中的列表
+    _currentMessages[index] = updatedMessage;
+
+    // 缓存媒体文件
+    _cacheMessageMedia(updatedMessage);
+
+    // 通知更新 (不需要频繁通知，但为了UI一致性还是通过 updateMessage 通知了)
+    // 这里简单 notifyListeners 由于是 updateMessage逻辑
+    // 如果频繁调用可能会影响性能，但在生成过程中每生成一个视频才调用一次，应该还好
+    // notifyListeners();
+    // 其实 updateMessage 没有 notifyListeners (除非是最后一条消息)
+    // 这里我们也不需要 notifyListeners，只要数据还在内存 correct
+    // 但如果 Gallery 页面依赖 getAllMediaItems, 它需要数据在 Hive 中正确
+  }
+
   /// 删除会话
   Future<void> deleteConversation(String id) async {
     // 清理缓存
