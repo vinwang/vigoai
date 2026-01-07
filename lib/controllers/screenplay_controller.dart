@@ -49,6 +49,7 @@ class ScreenplayController {
   Future<Screenplay> generateScreenplay(
     String userPrompt, {
     List<String>? userImages,
+    List<Map<String, String>>? history,
     void Function(double progress, String status)? onProgress,
   }) async {
     _isCancelled = false;
@@ -68,9 +69,11 @@ class ScreenplayController {
         AppLogger.success('图片分析', '角色特征提取完成');
       }
 
-      // 步骤 1: 调用 GLM-4.7 生成剧本（传入图片分析结果）
+      // 步骤 1: 调用 GLM-4.7 生成剧本（传入图片分析结果和历史记录）
       _emitProgress(0.1, '正在规划剧本...');
-      final screenplayJson = await _callGLMForScreenplay(userPrompt, characterAnalysis);
+      final screenplayJson = await _callGLMForScreenplay(
+          userPrompt, characterAnalysis,
+          history: history);
 
       if (_isCancelled) {
         AppLogger.warn('剧本生成', '用户取消操作');
@@ -83,12 +86,14 @@ class ScreenplayController {
       _currentScreenplay = screenplay;
       _screenplayController.add(screenplay);
 
-      AppLogger.success('剧本生成', '剧本生成成功: ${screenplay.scriptTitle}, ${screenplay.scenes.length} 个场景');
+      AppLogger.success('剧本生成',
+          '剧本生成成功: ${screenplay.scriptTitle}, ${screenplay.scenes.length} 个场景');
       _emitProgress(0.3, '剧本规划完成！开始生成图片...');
 
       // 步骤 3: 批量生成图片
       // 注意：_generateAllImages 会更新 _currentScreenplay
-      await _generateAllImages(_currentScreenplay!, onProgress: (progress, status) {
+      await _generateAllImages(_currentScreenplay!,
+          onProgress: (progress, status) {
         final totalProgress = 0.3 + (progress * 0.4); // 30%-70% for images
         _emitProgress(totalProgress, status);
         onProgress?.call(totalProgress, status);
@@ -101,7 +106,8 @@ class ScreenplayController {
 
       // 步骤 4: 批量生成视频
       // 重要：必须使用更新后的 _currentScreenplay，因为图片 URL 已经填充
-      await _generateAllVideos(_currentScreenplay!, onProgress: (progress, status) {
+      await _generateAllVideos(_currentScreenplay!,
+          onProgress: (progress, status) {
         final totalProgress = 0.7 + (progress * 0.3); // 70%-100% for videos
         _emitProgress(totalProgress, status);
         onProgress?.call(totalProgress, status);
@@ -153,7 +159,8 @@ class ScreenplayController {
 
     try {
       // 更新状态为生成中
-      _currentScreenplay = _currentScreenplay!.updateStatus(ScreenplayStatus.generating);
+      _currentScreenplay =
+          _currentScreenplay!.updateStatus(ScreenplayStatus.generating);
       _screenplayController.add(_currentScreenplay!);
 
       // 获取角色组合三视图 URL（最多2个角色）
@@ -166,14 +173,19 @@ class ScreenplayController {
       // 更新进度的辅助函数
       void updateProgress() {
         final progress = completedSteps.length / totalSteps;
-        final completedImages = completedSteps.where((s) => s.startsWith('image_')).length;
-        final completedVideos = completedSteps.where((s) => s.startsWith('video_')).length;
-        _emitProgress(progress, '$completedImages/$totalScenes 图片完成, $completedVideos/$totalScenes 视频完成');
-        onProgress?.call(progress, '$completedImages/$totalScenes 图片完成, $completedVideos/$totalScenes 视频完成');
+        final completedImages =
+            completedSteps.where((s) => s.startsWith('image_')).length;
+        final completedVideos =
+            completedSteps.where((s) => s.startsWith('video_')).length;
+        _emitProgress(progress,
+            '$completedImages/$totalScenes 图片完成, $completedVideos/$totalScenes 视频完成');
+        onProgress?.call(progress,
+            '$completedImages/$totalScenes 图片完成, $completedVideos/$totalScenes 视频完成');
       }
 
       // 获取并发配置
-      final concurrency = ApiConfig.concurrentScenes > 0 ? ApiConfig.concurrentScenes : 3;
+      final concurrency =
+          ApiConfig.concurrentScenes > 0 ? ApiConfig.concurrentScenes : 3;
       AppLogger.info('剧本生成（从确认）', '并发模式: 每批 $concurrency 个场景并行处理');
 
       // 处理单个场景的函数
@@ -186,7 +198,8 @@ class ScreenplayController {
           (s) => s.sceneId == scene.sceneId,
         );
         if (currentScene.status != SceneStatus.pending) {
-          AppLogger.info('剧本生成', '场景 $sceneNum 已被处理（状态: ${currentScene.status.displayName}），跳过');
+          AppLogger.info('剧本生成',
+              '场景 $sceneNum 已被处理（状态: ${currentScene.status.displayName}），跳过');
           // 仍然标记为已完成以更新进度
           if (!completedSteps.contains('image_$sceneIdKey')) {
             completedSteps.add('image_$sceneIdKey');
@@ -236,7 +249,8 @@ class ScreenplayController {
           // 更新场景图片
           _currentScreenplay = _currentScreenplay!.updateScene(
             scene.sceneId,
-            scene.copyWith(imageUrl: imageUrl, status: SceneStatus.imageCompleted),
+            scene.copyWith(
+                imageUrl: imageUrl, status: SceneStatus.imageCompleted),
           );
           _screenplayController.add(_currentScreenplay!);
           AppLogger.success('图片生成', '场景 $sceneNum 图片生成完成: $imageUrl');
@@ -263,7 +277,8 @@ class ScreenplayController {
 
         // === 步骤2: 生成场景视频 ===
         // 更新状态为视频生成中
-        final updatedScene = _currentScreenplay!.scenes.firstWhere((s) => s.sceneId == scene.sceneId);
+        final updatedScene = _currentScreenplay!.scenes
+            .firstWhere((s) => s.sceneId == scene.sceneId);
         _currentScreenplay = _currentScreenplay!.updateScene(
           scene.sceneId,
           updatedScene.copyWith(status: SceneStatus.videoGenerating),
@@ -284,7 +299,8 @@ class ScreenplayController {
           final characterDescription = scene.characterDescription;
           String scenePrompt = scene.videoPrompt;
           if (characterDescription.isNotEmpty) {
-            scenePrompt = 'Character reference: $characterDescription. Scene: ${scene.videoPrompt}';
+            scenePrompt =
+                'Character reference: $characterDescription. Scene: ${scene.videoPrompt}';
           }
 
           // 调用视频生成API（启用提示词净化，避免触发管控）
@@ -309,20 +325,25 @@ class ScreenplayController {
           );
 
           // 更新场景视频
-          final sceneWithVideo = _currentScreenplay!.scenes.firstWhere((s) => s.sceneId == scene.sceneId);
+          final sceneWithVideo = _currentScreenplay!.scenes
+              .firstWhere((s) => s.sceneId == scene.sceneId);
           _currentScreenplay = _currentScreenplay!.updateScene(
             scene.sceneId,
-            sceneWithVideo.copyWith(videoUrl: finalResponse.videoUrl, status: SceneStatus.completed),
+            sceneWithVideo.copyWith(
+                videoUrl: finalResponse.videoUrl,
+                status: SceneStatus.completed),
           );
           _screenplayController.add(_currentScreenplay!);
-          AppLogger.success('视频生成', '场景 $sceneNum 视频生成完成: ${finalResponse.videoUrl}');
+          AppLogger.success(
+              '视频生成', '场景 $sceneNum 视频生成完成: ${finalResponse.videoUrl}');
 
           // 更新进度
           completedSteps.add('video_$sceneIdKey');
           updateProgress();
         } catch (e) {
           AppLogger.error('视频生成', '场景 $sceneNum 视频生成失败: $e');
-          final failedScene = _currentScreenplay!.scenes.firstWhere((s) => s.sceneId == scene.sceneId);
+          final failedScene = _currentScreenplay!.scenes
+              .firstWhere((s) => s.sceneId == scene.sceneId);
           _currentScreenplay = _currentScreenplay!.updateScene(
             scene.sceneId,
             failedScene.copyWith(status: SceneStatus.failed),
@@ -340,10 +361,12 @@ class ScreenplayController {
         }
 
         final batchStart = i;
-        final batchEnd = (i + concurrency).clamp(0, confirmedScreenplay.scenes.length);
+        final batchEnd =
+            (i + concurrency).clamp(0, confirmedScreenplay.scenes.length);
         final batch = confirmedScreenplay.scenes.sublist(batchStart, batchEnd);
 
-        AppLogger.info('剧本生成（从确认）', '处理批次 ${batchStart + 1}-$batchEnd (${batch.length} 个场景)');
+        AppLogger.info('剧本生成（从确认）',
+            '处理批次 ${batchStart + 1}-$batchEnd (${batch.length} 个场景)');
 
         // 并行处理当前批次的所有场景
         await Future.wait(
@@ -357,7 +380,8 @@ class ScreenplayController {
       }
 
       // 更新状态为完成
-      _currentScreenplay = _currentScreenplay!.updateStatus(ScreenplayStatus.completed);
+      _currentScreenplay =
+          _currentScreenplay!.updateStatus(ScreenplayStatus.completed);
       _screenplayController.add(_currentScreenplay!);
 
       AppLogger.success('剧本生成（从确认）', '全部完成！${_currentScreenplay!.scriptTitle}');
@@ -369,7 +393,8 @@ class ScreenplayController {
 
       return _currentScreenplay!;
     } catch (e) {
-      _currentScreenplay = _currentScreenplay!.updateStatus(ScreenplayStatus.failed);
+      _currentScreenplay =
+          _currentScreenplay!.updateStatus(ScreenplayStatus.failed);
       _screenplayController.add(_currentScreenplay!);
       _userOriginalImages = null;
       _characterReferenceUrls = null;
@@ -402,7 +427,9 @@ class ScreenplayController {
   /// 根据当前状态智能重试：
   /// - 如果图片已生成，只重试视频
   /// - 如果图片未生成，重试图片和视频
-  Future<void> retryScene(int sceneId, {void Function(double progress, String status)? onProgress, bool forceRegenerateImage = false}) async {
+  Future<void> retryScene(int sceneId,
+      {void Function(double progress, String status)? onProgress,
+      bool forceRegenerateImage = false}) async {
     if (_currentScreenplay == null) {
       throw StateError('没有当前剧本');
     }
@@ -417,7 +444,8 @@ class ScreenplayController {
     final hasImage = scene.imageUrl != null && scene.imageUrl!.isNotEmpty;
     final shouldRegenerateImage = forceRegenerateImage || !hasImage;
 
-    AppLogger.info('场景重试', '开始重试场景 $sceneNum, 已有图片: $hasImage, 强制重新生成图片: $forceRegenerateImage');
+    AppLogger.info('场景重试',
+        '开始重试场景 $sceneNum, 已有图片: $hasImage, 强制重新生成图片: $forceRegenerateImage');
 
     // 获取角色组合三视图 URL
     final characterUrls = _characterReferenceUrls?.take(2).toList() ?? [];
@@ -434,7 +462,11 @@ class ScreenplayController {
         );
         _screenplayController.add(_currentScreenplay!);
 
-        onProgress?.call(0.1, forceRegenerateImage ? '场景 $sceneNum 正在重新生成图片...' : '场景 $sceneNum 正在生成图片...');
+        onProgress?.call(
+            0.1,
+            forceRegenerateImage
+                ? '场景 $sceneNum 正在重新生成图片...'
+                : '场景 $sceneNum 正在生成图片...');
 
         // 优先使用用户原图（图生图），否则使用角色三视图
         if (_userOriginalImages != null && _userOriginalImages!.isNotEmpty) {
@@ -459,7 +491,8 @@ class ScreenplayController {
         // 更新场景图片
         _currentScreenplay = _currentScreenplay!.updateScene(
           sceneId,
-          scene.copyWith(imageUrl: imageUrl, status: SceneStatus.imageCompleted),
+          scene.copyWith(
+              imageUrl: imageUrl, status: SceneStatus.imageCompleted),
         );
         _screenplayController.add(_currentScreenplay!);
         AppLogger.success('图片生成', '场景 $sceneNum 图片生成完成');
@@ -468,10 +501,12 @@ class ScreenplayController {
       }
 
       // === 步骤2: 生成场景视频 ===
-      onProgress?.call(shouldRegenerateImage ? 0.6 : 0.5, '场景 $sceneNum 正在生成视频...');
+      onProgress?.call(
+          shouldRegenerateImage ? 0.6 : 0.5, '场景 $sceneNum 正在生成视频...');
 
       // 更新状态为视频生成中
-      final updatedScene = _currentScreenplay!.scenes.firstWhere((s) => s.sceneId == sceneId);
+      final updatedScene =
+          _currentScreenplay!.scenes.firstWhere((s) => s.sceneId == sceneId);
       _currentScreenplay = _currentScreenplay!.updateScene(
         sceneId,
         updatedScene.copyWith(status: SceneStatus.videoGenerating),
@@ -486,15 +521,18 @@ class ScreenplayController {
       }
 
       // === 准备视频提示词 ===
-      onProgress?.call(shouldRegenerateImage ? 0.55 : 0.45, '场景 $sceneNum 正在准备视频提示词...');
+      onProgress?.call(
+          shouldRegenerateImage ? 0.55 : 0.45, '场景 $sceneNum 正在准备视频提示词...');
 
       // 优先使用用户自定义提示词，否则使用 AI 重写的安全版本
       String scenePrompt;
-      if (scene.customVideoPrompt != null && scene.customVideoPrompt!.isNotEmpty) {
+      if (scene.customVideoPrompt != null &&
+          scene.customVideoPrompt!.isNotEmpty) {
         // 用户提供了自定义提示词，直接使用
         scenePrompt = scene.customVideoPrompt!;
         if (scene.characterDescription.isNotEmpty) {
-          scenePrompt = 'Character reference: ${scene.characterDescription}. $scenePrompt';
+          scenePrompt =
+              'Character reference: ${scene.characterDescription}. $scenePrompt';
         }
         AppLogger.info('场景重试', '使用用户自定义提示词: $scenePrompt');
       } else {
@@ -506,7 +544,8 @@ class ScreenplayController {
 
         // 构建最终提示词（包含角色描述）
         if (scene.characterDescription.isNotEmpty) {
-          scenePrompt = 'Character reference: ${scene.characterDescription}. Scene: $rewrittenPrompt';
+          scenePrompt =
+              'Character reference: ${scene.characterDescription}. Scene: $rewrittenPrompt';
         } else {
           scenePrompt = rewrittenPrompt;
         }
@@ -530,22 +569,25 @@ class ScreenplayController {
         interval: const Duration(seconds: 2),
         onProgress: (progress, status) {
           final baseProgress = shouldRegenerateImage ? 0.6 : 0.5;
-          final overallProgress = baseProgress + (progress / 100) * (1 - baseProgress);
+          final overallProgress =
+              baseProgress + (progress / 100) * (1 - baseProgress);
           onProgress?.call(overallProgress, '场景 $sceneNum 视频生成中... $progress%');
         },
       );
 
       // 更新场景视频
-      final sceneWithVideo = _currentScreenplay!.scenes.firstWhere((s) => s.sceneId == sceneId);
+      final sceneWithVideo =
+          _currentScreenplay!.scenes.firstWhere((s) => s.sceneId == sceneId);
       _currentScreenplay = _currentScreenplay!.updateScene(
         sceneId,
-        sceneWithVideo.copyWith(videoUrl: finalResponse.videoUrl, status: SceneStatus.completed),
+        sceneWithVideo.copyWith(
+            videoUrl: finalResponse.videoUrl, status: SceneStatus.completed),
       );
       _screenplayController.add(_currentScreenplay!);
       AppLogger.success('场景重试', '场景 $sceneNum 重试成功');
       onProgress?.call(1.0, '场景 $sceneNum 重试完成');
     } catch (e) {
-      AppLogger.error('场景重试', '场景 $sceneNum 重试失败: $e');
+      AppLogger.error('场景重试', '场景 $sceneId 重试失败: $e');
       _currentScreenplay = _currentScreenplay!.updateScene(
         sceneId,
         scene.copyWith(status: SceneStatus.failed),
@@ -573,11 +615,13 @@ class ScreenplayController {
 
     // 检查场景状态，只有 pending 状态可以手动触发（failed 状态用 retryScene）
     if (scene.status != SceneStatus.pending) {
-      AppLogger.warn('手动生成', '场景 $sceneId 状态为 ${scene.status.displayName}，无法手动触发');
+      AppLogger.warn(
+          '手动生成', '场景 $sceneId 状态为 ${scene.status.displayName}，无法手动触发');
       if (scene.status == SceneStatus.failed) {
         // 如果是失败状态，调用重试逻辑
         AppLogger.info('手动生成', '场景 $sceneId 为失败状态，转为重试');
-        await retryScene(sceneId, onProgress: onProgress, forceRegenerateImage: true);
+        await retryScene(sceneId,
+            onProgress: onProgress, forceRegenerateImage: true);
       }
       return;
     }
@@ -587,7 +631,8 @@ class ScreenplayController {
 
     // 直接调用 retryScene 来执行实际的生成逻辑
     // retryScene 会处理图片和视频的生成
-    await retryScene(sceneId, onProgress: onProgress, forceRegenerateImage: true);
+    await retryScene(sceneId,
+        onProgress: onProgress, forceRegenerateImage: true);
   }
 
   /// 🆕 手动触发所有待处理场景的生成（串行，一个一个来）
@@ -670,7 +715,9 @@ class ScreenplayController {
 
   /// 调用 GLM-4.7 获取剧本 JSON
   /// [characterAnalysis] 用户图片的角色特征分析结果（如果有）
-  Future<String> _callGLMForScreenplay(String userPrompt, String? characterAnalysis) async {
+  Future<String> _callGLMForScreenplay(
+      String userPrompt, String? characterAnalysis,
+      {List<Map<String, String>>? history}) async {
     try {
       // 构建增强的提示词
       String enhancedPrompt = userPrompt;
@@ -684,6 +731,7 @@ $characterAnalysis
       }
 
       final messages = [
+        if (history != null && history.isNotEmpty) ...history,
         {'role': 'user', 'content': enhancedPrompt},
       ];
 
@@ -721,16 +769,16 @@ $characterAnalysis
     int completed = 0;
 
     // 获取第一张场景的人物描述（备用）
-    final characterDescription = scenes.isNotEmpty
-        ? scenes.first.characterDescription
-        : '';
+    final characterDescription =
+        scenes.isNotEmpty ? scenes.first.characterDescription : '';
 
     if (characterDescription.isNotEmpty) {
       AppLogger.info('人物一致性', '人物描述: $characterDescription');
     }
 
     // 检查是否有角色三视图可用
-    final hasCharacterRefs = _characterReferenceUrls != null && _characterReferenceUrls!.isNotEmpty;
+    final hasCharacterRefs =
+        _characterReferenceUrls != null && _characterReferenceUrls!.isNotEmpty;
     if (hasCharacterRefs) {
       AppLogger.info('人物一致性', '使用角色三视图: ${_characterReferenceUrls!.length} 张');
     }
@@ -765,7 +813,9 @@ $characterAnalysis
         String imageUrl;
 
         // 第一张场景：如果有用户原图，使用图生图
-        if (i == 0 && _userOriginalImages != null && _userOriginalImages!.isNotEmpty) {
+        if (i == 0 &&
+            _userOriginalImages != null &&
+            _userOriginalImages!.isNotEmpty) {
           AppLogger.info('图片生成', '场景 1 使用用户原图进行图生图');
           imageUrl = await _apiService.generateImage(
             scene.imagePrompt,
@@ -785,7 +835,8 @@ $characterAnalysis
         else {
           String enhancedPrompt = scene.imagePrompt;
           if (i > 0 && characterDescription.isNotEmpty) {
-            enhancedPrompt = 'Character reference: $characterDescription. Scene: ${scene.imagePrompt}';
+            enhancedPrompt =
+                'Character reference: $characterDescription. Scene: ${scene.imagePrompt}';
             AppLogger.info('图片生成', '场景 ${i + 1} 使用文本描述（无三视图）');
           }
           imageUrl = await _apiService.generateImage(enhancedPrompt);
@@ -796,7 +847,8 @@ $characterAnalysis
           imageUrl: imageUrl,
           status: SceneStatus.imageCompleted,
         );
-        _currentScreenplay = _currentScreenplay!.updateScene(scene.sceneId, updatedScene);
+        _currentScreenplay =
+            _currentScreenplay!.updateScene(scene.sceneId, updatedScene);
         _screenplayController.add(_currentScreenplay!);
 
         completed++;
@@ -805,7 +857,8 @@ $characterAnalysis
         AppLogger.error('图片生成', '场景 ${scene.sceneId} 图片生成失败: $e');
         // 标记失败但继续
         final failedScene = scene.copyWith(status: SceneStatus.failed);
-        _currentScreenplay = _currentScreenplay!.updateScene(scene.sceneId, failedScene);
+        _currentScreenplay =
+            _currentScreenplay!.updateScene(scene.sceneId, failedScene);
         _screenplayController.add(_currentScreenplay!);
         completed++;
       }
@@ -826,9 +879,8 @@ $characterAnalysis
     final currentScenes = _currentScreenplay!.scenes;
 
     // 筛选出有图片的场景
-    final scenesWithImages = currentScenes
-        .where((s) => s.imageUrl != null)
-        .toList();
+    final scenesWithImages =
+        currentScenes.where((s) => s.imageUrl != null).toList();
 
     if (scenesWithImages.isEmpty) {
       AppLogger.warn('视频生成', '没有可用的分镜图片');
@@ -852,7 +904,8 @@ $characterAnalysis
 
       final scene = scenesWithImages[i];
       final sceneProgress = i / scenesWithImages.length;
-      onProgress(sceneProgress, '正在生成场景 ${i + 1}/${scenesWithImages.length} 的视频...');
+      onProgress(
+          sceneProgress, '正在生成场景 ${i + 1}/${scenesWithImages.length} 的视频...');
 
       // 更新场景状态为生成中
       _currentScreenplay = _currentScreenplay!.updateScene(
@@ -871,13 +924,15 @@ $characterAnalysis
         // 添加当前场景的分镜图
         referenceUrls.add(scene.imageUrl!);
 
-        AppLogger.info('视频生成', '场景 ${i + 1} 参考图: ${referenceUrls.length} 张 (角色: ${characterUrls.length}, 分镜: 1)');
+        AppLogger.info('视频生成',
+            '场景 ${i + 1} 参考图: ${referenceUrls.length} 张 (角色: ${characterUrls.length}, 分镜: 1)');
 
         // 构建场景视频提示词
         final characterDescription = scene.characterDescription;
         String scenePrompt = scene.videoPrompt;
         if (characterDescription.isNotEmpty) {
-          scenePrompt = 'Character reference: $characterDescription. Scene: ${scene.videoPrompt}';
+          scenePrompt =
+              'Character reference: $characterDescription. Scene: ${scene.videoPrompt}';
         }
 
         // 调用视频生成API（启用提示词净化，避免触发管控）
@@ -899,7 +954,8 @@ $characterAnalysis
             timeout: const Duration(minutes: 5),
             interval: const Duration(seconds: 2),
             onProgress: (progress, status) {
-              final overallProgress = (i + progress / 100) / scenesWithImages.length;
+              final overallProgress =
+                  (i + progress / 100) / scenesWithImages.length;
               onProgress(overallProgress, '场景 ${i + 1} 视频生成中... $progress%');
             },
             isCancelled: () => _isCancelled, // 传递取消检查
@@ -911,7 +967,8 @@ $characterAnalysis
           videoUrl: finalResponse.videoUrl,
           status: SceneStatus.completed,
         );
-        _currentScreenplay = _currentScreenplay!.updateScene(scene.sceneId, updatedScene);
+        _currentScreenplay =
+            _currentScreenplay!.updateScene(scene.sceneId, updatedScene);
         _screenplayController.add(_currentScreenplay!);
 
         // 记录视频URL用于后续合并
@@ -919,12 +976,14 @@ $characterAnalysis
           sceneVideoUrls.add(finalResponse.videoUrl!);
         }
 
-        AppLogger.success('视频生成', '场景 ${scene.sceneId} 视频生成完成: ${finalResponse.videoUrl}');
+        AppLogger.success(
+            '视频生成', '场景 ${scene.sceneId} 视频生成完成: ${finalResponse.videoUrl}');
       } catch (e) {
         AppLogger.error('视频生成', '场景 ${scene.sceneId} 视频生成失败: $e');
         // 标记失败但继续其他场景
         final failedScene = scene.copyWith(status: SceneStatus.failed);
-        _currentScreenplay = _currentScreenplay!.updateScene(scene.sceneId, failedScene);
+        _currentScreenplay =
+            _currentScreenplay!.updateScene(scene.sceneId, failedScene);
         _screenplayController.add(_currentScreenplay!);
       }
     }
@@ -933,7 +992,8 @@ $characterAnalysis
       throw Exception('操作已取消');
     }
 
-    AppLogger.success('视频生成', '所有场景视频生成完成: ${sceneVideoUrls.length}/${scenesWithImages.length} 成功');
+    AppLogger.success('视频生成',
+        '所有场景视频生成完成: ${sceneVideoUrls.length}/${scenesWithImages.length} 成功');
     onProgress(1.0, '所有场景视频生成完成！');
 
     // TODO: 后续可以在这里添加视频合并逻辑
@@ -969,7 +1029,8 @@ $characterAnalysis
     }
 
     final screenplay = _currentScreenplay!;
-    final failedScenes = screenplay.scenes.where((s) => s.status == SceneStatus.failed).toList();
+    final failedScenes =
+        screenplay.scenes.where((s) => s.status == SceneStatus.failed).toList();
 
     if (failedScenes.isEmpty) {
       AppLogger.info('重试', '没有失败的场景');
@@ -980,20 +1041,25 @@ $characterAnalysis
     _isCancelled = false;
 
     // 重新生成失败的图片
-    final imageFailedScenes = failedScenes.where((s) => s.imageUrl == null).toList();
+    final imageFailedScenes =
+        failedScenes.where((s) => s.imageUrl == null).toList();
     if (imageFailedScenes.isNotEmpty) {
       await _generateAllImages(
         screenplay,
-        onProgress: (progress, status) => onProgress?.call(progress * 0.5, status),
+        onProgress: (progress, status) =>
+            onProgress?.call(progress * 0.5, status),
       );
     }
 
     // 重新生成失败的视频
-    final videoFailedScenes = failedScenes.where((s) => s.imageUrl != null && s.videoUrl == null).toList();
+    final videoFailedScenes = failedScenes
+        .where((s) => s.imageUrl != null && s.videoUrl == null)
+        .toList();
     if (videoFailedScenes.isNotEmpty) {
       await _generateAllVideos(
         screenplay,
-        onProgress: (progress, status) => onProgress?.call(0.5 + progress * 0.5, status),
+        onProgress: (progress, status) =>
+            onProgress?.call(0.5 + progress * 0.5, status),
       );
     }
   }
@@ -1035,5 +1101,6 @@ class ScreenplayProgress {
   });
 
   @override
-  String toString() => 'ScreenplayProgress(${(progress * 100).round()}%, $status)';
+  String toString() =>
+      'ScreenplayProgress(${(progress * 100).round()}%, $status)';
 }

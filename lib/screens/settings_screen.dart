@@ -32,14 +32,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF1C1C1E),
+            color: Color(0xFF0F172A),
           ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF1C1C1E)),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF0F172A)),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -124,7 +124,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1C1C1E),
+                          color: Color(0xFF0F172A),
                         ),
                       ),
                       SizedBox(height: 2),
@@ -149,7 +149,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             '智谱 GLM-4.7',
             ApiConfigService.maskApiKey(ApiConfigService.getZhipuApiKey()),
             Icons.psychology_outlined,
-            const Color(0xFF8B5CF6),
+            const Color(0xFF0EA5E9),
             () => _showApiKeyEditDialog(
               context,
               '智谱 GLM API Key',
@@ -162,8 +162,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context,
             '🚀 智谱 GLM Coding 超值订阅',
             '20+ 编程工具无缝支持，限时惊喜价！',
-            const Color(0xFF8B5CF6),
-            'https://www.bigmodel.cn/glm-coding?ic=BUXAZXR3YZ',
+            const Color(0xFF0EA5E9),
+            'https://www.bigmodel.cn/glm-coding?ic=UYGMXNNLNP',
           ),
           const Divider(height: 1),
 
@@ -173,7 +173,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             '视频生成 (tuzi-api)',
             ApiConfigService.maskApiKey(ApiConfigService.getVideoApiKey()),
             Icons.videocam_outlined,
-            const Color(0xFFEC4899),
+            const Color(0xFF06B6D4),
             () => _showApiKeyEditDialog(
               context,
               '视频生成 API Key',
@@ -202,8 +202,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context,
             '🎁 邀请注册获额度',
             '邀请好友双方各得 \$0.4 额度',
-            const Color(0xFFEC4899),
-            'https://api.tu-zi.com/register?aff=zTvc',
+            const Color(0xFF06B6D4),
+            'https://apicdn.tu-zi.com/register?aff=fsyp',
           ),
           const Divider(height: 1),
 
@@ -365,7 +365,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF1C1C1E),
+                      color: Color(0xFF0F172A),
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -405,7 +405,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(title),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -422,7 +423,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   hintText: '请输入 API Key',
                   suffixIcon: IconButton(
                     icon: Icon(
-                      isVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      isVisible
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                     ),
                     onPressed: () {
                       setDialogState(() {
@@ -434,7 +437,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                '提示：API Key 将保存在本地，仅用于此设备。',
+                '提示：点击上方选项配置 API Key。Key 将安全存储在本地。',
                 style: TextStyle(
                   fontSize: 12,
                   color: Color(0xFF8E8E93),
@@ -461,7 +464,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Navigator.pop(context, true);
               },
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF8B5CF6),
+                backgroundColor: const Color(0xFF0EA5E9),
               ),
               child: const Text('保存'),
             ),
@@ -497,7 +500,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Widget _buildCacheManagementCard(BuildContext context, ConversationProvider provider) {
+  Widget _buildCacheManagementCard(
+      BuildContext context, ConversationProvider provider) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -523,7 +527,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   height: 36,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                      colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -543,7 +547,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1C1C1E),
+                          color: Color(0xFF0F172A),
                         ),
                       ),
                       SizedBox(height: 2),
@@ -577,13 +581,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               final stats = snapshot.data!;
               return Column(
                 children: [
-                  _buildStatRow('总缓存大小', stats.totalSizeFormatted, Icons.sd_storage_outlined),
+                  _buildStatRow('总缓存大小', stats.totalSizeFormatted,
+                      Icons.sd_storage_outlined),
                   const Divider(height: 1),
-                  _buildStatRow('缓存文件数', '${stats.fileCount} 个', Icons.insert_drive_file_outlined),
+                  _buildStatRow('缓存文件数', '${stats.fileCount} 个',
+                      Icons.insert_drive_file_outlined),
                   const Divider(height: 1),
-                  _buildStatRow('图片数量', '${stats.imageCount} 张', Icons.image_outlined),
+                  _buildStatRow(
+                      '图片数量', '${stats.imageCount} 张', Icons.image_outlined),
                   const Divider(height: 1),
-                  _buildStatRow('视频数量', '${stats.videoCount} 个', Icons.videocam_outlined),
+                  _buildStatRow(
+                      '视频数量', '${stats.videoCount} 个', Icons.videocam_outlined),
                 ],
               );
             },
@@ -598,10 +606,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: double.infinity,
                   child: FilledButton.icon(
                     onPressed: () => _clearExpiredCache(context, provider),
-                    icon: const Icon(Icons.cleaning_services_outlined, size: 20),
+                    icon:
+                        const Icon(Icons.cleaning_services_outlined, size: 20),
                     label: const Text('清理过期缓存'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF8B5CF6),
+                      backgroundColor: const Color(0xFF0EA5E9),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -640,7 +649,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: const Color(0xFF8B5CF6)),
+          Icon(icon, size: 18, color: const Color(0xFF0EA5E9)),
           const SizedBox(width: 12),
           Text(
             label,
@@ -655,7 +664,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF1C1C1E),
+              color: Color(0xFF0F172A),
             ),
           ),
         ],
@@ -663,7 +672,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildVideoMergeCard(BuildContext context, VideoMergeProvider provider) {
+  Widget _buildVideoMergeCard(
+      BuildContext context, VideoMergeProvider provider) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -689,7 +699,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   height: 36,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
+                      colors: [Color(0xFF06B6D4), Color(0xFF0EA5E9)],
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -709,7 +719,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1C1C1E),
+                          color: Color(0xFF0F172A),
                         ),
                       ),
                       SizedBox(height: 2),
@@ -728,9 +738,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
 
           // 统计信息
-          _buildStatRow('已合并视频', '${provider.mergedVideosCount} 个', Icons.video_collection_outlined),
+          _buildStatRow('已合并视频', '${provider.mergedVideosCount} 个',
+              Icons.video_collection_outlined),
           const Divider(height: 1),
-          _buildStatRow('占用空间', provider.mergedVideosSizeFormatted, Icons.sd_storage_outlined),
+          _buildStatRow('占用空间', provider.mergedVideosSizeFormatted,
+              Icons.sd_storage_outlined),
 
           // 测试按钮
           Padding(
@@ -740,8 +752,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: const Icon(Icons.science, size: 18),
               label: const Text('🧪 测试7场景合并'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF8B5CF6),
-                side: const BorderSide(color: Color(0xFF8B5CF6)),
+                foregroundColor: const Color(0xFF0EA5E9),
+                side: const BorderSide(color: Color(0xFF0EA5E9)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -758,7 +770,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFFEDE9FE),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFA78BFA)),
+                border: Border.all(color: const Color(0xFF3B82F6)),
               ),
               child: const Row(
                 children: [
@@ -782,7 +794,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed: provider.isMerging ? null : () => _showMergeDialog(context, provider),
+                    onPressed: provider.isMerging
+                        ? null
+                        : () => _showMergeDialog(context, provider),
                     icon: provider.isMerging
                         ? const SizedBox(
                             width: 18,
@@ -793,9 +807,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           )
                         : const Icon(Icons.merge_type_outlined, size: 20),
-                    label: Text(provider.isMerging ? provider.statusMessage : '合并场景视频'),
+                    label: Text(
+                        provider.isMerging ? provider.statusMessage : '合并场景视频'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFEC4899),
+                      backgroundColor: const Color(0xFF06B6D4),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -810,7 +825,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: LinearProgressIndicator(
                       value: provider.progress,
                       backgroundColor: const Color(0xFFF3F4F6),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFEC4899)),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFF06B6D4)),
                     ),
                   ),
               ],
@@ -847,7 +863,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   height: 36,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+                      colors: [Color(0xFF3B82F6), Color(0xFF0EA5E9)],
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -867,7 +883,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1C1C1E),
+                          color: Color(0xFF0F172A),
                         ),
                       ),
                       SizedBox(height: 2),
@@ -890,12 +906,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             builder: (context, provider, child) {
               return Column(
                 children: [
-                  _buildStatRow('会话数量', '${provider.conversations.length} 个', Icons.folder_outlined),
+                  _buildStatRow('会话数量', '${provider.conversations.length} 个',
+                      Icons.folder_outlined),
                   const Divider(height: 1),
                   if (provider.currentConversation != null)
-                    _buildStatRow('当前会话消息', '${provider.currentMessages.length} 条', Icons.message_outlined),
-                  if (provider.currentConversation != null) const Divider(height: 1),
-                  _buildStatRow('数据库路径', 'hive_db/', Icons.folder_open_outlined),
+                    _buildStatRow(
+                        '当前会话消息',
+                        '${provider.currentMessages.length} 条',
+                        Icons.message_outlined),
+                  if (provider.currentConversation != null)
+                    const Divider(height: 1),
+                  _buildStatRow(
+                      '数据库路径', 'hive_db/', Icons.folder_open_outlined),
                 ],
               );
             },
@@ -930,8 +952,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: const Icon(Icons.download_outlined, size: 20),
                     label: const Text('导出数据 (JSON)'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF8B5CF6),
-                      side: const BorderSide(color: Color(0xFF8B5CF6)),
+                      foregroundColor: const Color(0xFF0EA5E9),
+                      side: const BorderSide(color: Color(0xFF0EA5E9)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -972,7 +994,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   height: 36,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                      colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -992,12 +1014,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1C1C1E),
+                          color: Color(0xFF0F172A),
                         ),
                       ),
                       SizedBox(height: 2),
                       Text(
-                        'AI 漫导 - 将创意转化为动漫视频',
+                        'VigoAI - 将创意转化为动漫视频',
                         style: TextStyle(
                           fontSize: 13,
                           color: Color(0xFF8E8E93),
@@ -1014,7 +1036,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _buildAboutRow('版本', '1.0.0'),
+                _buildAboutRow('版本', '1.0.1'),
                 const SizedBox(height: 12),
                 _buildAboutRow('数据库', 'Hive (轻量级 NoSQL)'),
                 const SizedBox(height: 12),
@@ -1045,7 +1067,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value,
             style: const TextStyle(
               fontSize: 14,
-              color: Color(0xFF1C1C1E),
+              color: Color(0xFF0F172A),
             ),
           ),
         ),
@@ -1053,7 +1075,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _clearExpiredCache(BuildContext context, ConversationProvider provider) async {
+  Future<void> _clearExpiredCache(
+      BuildContext context, ConversationProvider provider) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1070,7 +1093,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('清理完成：删除 ${result.removedCount} 个文件，释放 ${result.freedSpaceFormatted}'),
+            content: Text(
+                '清理完成：删除 ${result.removedCount} 个文件，释放 ${result.freedSpaceFormatted}'),
             backgroundColor: const Color(0xFF10B981),
             behavior: SnackBarBehavior.floating,
           ),
@@ -1091,7 +1115,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _clearAllCache(BuildContext context, ConversationProvider provider) async {
+  Future<void> _clearAllCache(
+      BuildContext context, ConversationProvider provider) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1154,10 +1179,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   /// 显示视频合并对话框
-  Future<void> _showMergeDialog(BuildContext context, VideoMergeProvider provider) async {
+  Future<void> _showMergeDialog(
+      BuildContext context, VideoMergeProvider provider) async {
     // 获取当前对话中的剧本
     final chatProvider = context.read<ChatProvider>();
-    final currentScreenplay = chatProvider.screenplayController.currentScreenplay;
+    final currentScreenplay =
+        chatProvider.screenplayController.currentScreenplay;
 
     if (currentScreenplay == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1171,7 +1198,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     // 检查是否有足够的场景视频
-    final scenesWithVideo = currentScreenplay.scenes.where((s) => s.videoUrl != null).length;
+    final scenesWithVideo =
+        currentScreenplay.scenes.where((s) => s.videoUrl != null).length;
     if (scenesWithVideo == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1212,7 +1240,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFEC4899),
+              backgroundColor: const Color(0xFF06B6D4),
             ),
             child: const Text('开始合并'),
           ),
@@ -1225,7 +1253,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => _MergeProgressDialog(screenplay: currentScreenplay),
+        builder: (context) =>
+            _MergeProgressDialog(screenplay: currentScreenplay),
       );
 
       // 开始合并
@@ -1234,7 +1263,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   /// 使用 Mock 数据测试合并功能
-  Future<void> _testMergeWithMockVideos(BuildContext context, VideoMergeProvider provider) async {
+  Future<void> _testMergeWithMockVideos(
+      BuildContext context, VideoMergeProvider provider) async {
     // 创建 Mock 剧本，使用真实生成的7个视频链接进行测试
     final mockScreenplay = Screenplay(
       taskId: 'test_${DateTime.now().millisecondsSinceEpoch}',
@@ -1246,7 +1276,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           imagePrompt: 'Scene 1 for testing video merge',
           videoPrompt: 'Camera panning scene',
           characterDescription: 'Test',
-          videoUrl: 'https://filesystem.site/cdn/20260104/2e0938b114576d0217175cfa925e2a.mp4',
+          videoUrl:
+              'https://filesystem.site/cdn/20260104/2e0938b114576d0217175cfa925e2a.mp4',
           status: SceneStatus.completed,
         ),
         Scene(
@@ -1255,7 +1286,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           imagePrompt: 'Scene 2 for testing video merge',
           videoPrompt: 'Camera zooming scene',
           characterDescription: 'Test',
-          videoUrl: 'https://filesystem.site/cdn/20260104/6035dcf051bf3bf69dde8fec7c873c.mp4',
+          videoUrl:
+              'https://filesystem.site/cdn/20260104/6035dcf051bf3bf69dde8fec7c873c.mp4',
           status: SceneStatus.completed,
         ),
         Scene(
@@ -1264,7 +1296,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           imagePrompt: 'Scene 3 for testing video merge',
           videoPrompt: 'Camera tracking scene',
           characterDescription: 'Test',
-          videoUrl: 'https://filesystem.site/cdn/20260104/a2a3187da7a7b2edaee219ccf38c53.mp4',
+          videoUrl:
+              'https://filesystem.site/cdn/20260104/a2a3187da7a7b2edaee219ccf38c53.mp4',
           status: SceneStatus.completed,
         ),
         Scene(
@@ -1273,7 +1306,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           imagePrompt: 'Scene 4 for testing video merge',
           videoPrompt: 'Camera rotating scene',
           characterDescription: 'Test',
-          videoUrl: 'https://filesystem.site/cdn/20260104/19bea6cc8e95b5865fae775424c521.mp4',
+          videoUrl:
+              'https://filesystem.site/cdn/20260104/19bea6cc8e95b5865fae775424c521.mp4',
           status: SceneStatus.completed,
         ),
         Scene(
@@ -1282,7 +1316,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           imagePrompt: 'Scene 5 for testing video merge',
           videoPrompt: 'Camera dollying scene',
           characterDescription: 'Test',
-          videoUrl: 'https://filesystem.site/cdn/20260104/8b9e9d86218d8eeb26caddb2e921e6.mp4',
+          videoUrl:
+              'https://filesystem.site/cdn/20260104/8b9e9d86218d8eeb26caddb2e921e6.mp4',
           status: SceneStatus.completed,
         ),
         Scene(
@@ -1291,7 +1326,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           imagePrompt: 'Scene 6 for testing video merge',
           videoPrompt: 'Camera crane shot',
           characterDescription: 'Test',
-          videoUrl: 'https://filesystem.site/cdn/20260104/3f071fce050dbeac6298af16a5d31a.mp4',
+          videoUrl:
+              'https://filesystem.site/cdn/20260104/3f071fce050dbeac6298af16a5d31a.mp4',
           status: SceneStatus.completed,
         ),
         Scene(
@@ -1300,7 +1336,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           imagePrompt: 'Scene 7 for testing video merge',
           videoPrompt: 'Camera tracking final',
           characterDescription: 'Test',
-          videoUrl: 'https://filesystem.site/cdn/20260104/8481a78572cecac738b1703924ae10.mp4',
+          videoUrl:
+              'https://filesystem.site/cdn/20260104/8481a78572cecac738b1703924ae10.mp4',
           status: SceneStatus.completed,
         ),
       ],
@@ -1313,7 +1350,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
-            Icon(Icons.science, color: Color(0xFF8B5CF6)),
+            Icon(Icons.science, color: Color(0xFF0EA5E9)),
             SizedBox(width: 8),
             Text('Mock 测试'),
           ],
@@ -1333,9 +1370,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('📹 视频 1: c855cd6...mp4', style: TextStyle(fontSize: 13)),
+                  Text('📹 视频 1: c855cd6...mp4',
+                      style: TextStyle(fontSize: 13)),
                   SizedBox(height: 4),
-                  Text('📹 视频 2: fc5a598...mp4', style: TextStyle(fontSize: 13)),
+                  Text('📹 视频 2: fc5a598...mp4',
+                      style: TextStyle(fontSize: 13)),
                 ],
               ),
             ),
@@ -1354,7 +1393,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF8B5CF6),
+              backgroundColor: const Color(0xFF0EA5E9),
             ),
             child: const Text('开始测试'),
           ),
@@ -1376,7 +1415,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   /// 清空合并的视频
-  Future<void> _clearMergedVideos(BuildContext context, VideoMergeProvider provider) async {
+  Future<void> _clearMergedVideos(
+      BuildContext context, VideoMergeProvider provider) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1432,11 +1472,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Text(
                   '会话总数: ${provider.conversations.length}',
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 16),
                 ),
                 const SizedBox(height: 16),
                 if (provider.conversations.isEmpty)
-                  const Text('暂无会话数据', style: TextStyle(color: Color(0xFF8E8E93)))
+                  const Text('暂无会话数据',
+                      style: TextStyle(color: Color(0xFF8E8E93)))
                 else
                   ...provider.conversations.take(5).map((conv) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
@@ -1445,11 +1487,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           children: [
                             Text(
                               conv.title,
-                              style: const TextStyle(fontWeight: FontWeight.w600),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600),
                             ),
                             Text(
                               '消息: ${conv.messageCount} | ${conv.updatedAt.toString().substring(0, 19)}',
-                              style: const TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+                              style: const TextStyle(
+                                  fontSize: 12, color: Color(0xFF8E8E93)),
                             ),
                           ],
                         ),
@@ -1459,7 +1503,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       '还有 ${provider.conversations.length - 5} 个会话...',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF8E8E93)),
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF8E8E93)),
                     ),
                   ),
               ],
@@ -1491,14 +1536,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       // 准备导出数据
       final exportData = {
-        'conversations': provider.conversations.map((conv) => {
-          'id': conv.id,
-          'title': conv.title,
-          'createdAt': conv.createdAt.toIso8601String(),
-          'updatedAt': conv.updatedAt.toIso8601String(),
-          'messageCount': conv.messageCount,
-          'isPinned': conv.isPinned,
-        }).toList(),
+        'conversations': provider.conversations
+            .map((conv) => {
+                  'id': conv.id,
+                  'title': conv.title,
+                  'createdAt': conv.createdAt.toIso8601String(),
+                  'updatedAt': conv.updatedAt.toIso8601String(),
+                  'messageCount': conv.messageCount,
+                  'isPinned': conv.isPinned,
+                })
+            .toList(),
         'exportTime': DateTime.now().toIso8601String(),
         'version': '1.0.0',
       };
@@ -1513,7 +1560,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: const Text('导出成功'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1528,9 +1576,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: SelectableText(
-                    jsonString.substring(0, jsonString.length > 500 ? 500 : jsonString.length) +
+                    jsonString.substring(0,
+                            jsonString.length > 500 ? 500 : jsonString.length) +
                         (jsonString.length > 500 ? '\n\n... (已截断)' : ''),
-                    style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
+                    style:
+                        const TextStyle(fontSize: 11, fontFamily: 'monospace'),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -1589,7 +1639,8 @@ class _MergeProgressDialog extends StatelessWidget {
               LinearProgressIndicator(
                 value: provider.progress,
                 backgroundColor: const Color(0xFFF3F4F6),
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFEC4899)),
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(Color(0xFF06B6D4)),
               ),
               const SizedBox(height: 8),
               Text(
@@ -1600,7 +1651,8 @@ class _MergeProgressDialog extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   provider.errorMessage!,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFFF87171)),
+                  style:
+                      const TextStyle(fontSize: 12, color: Color(0xFFF87171)),
                 ),
               ],
             ],
@@ -1673,7 +1725,8 @@ class _MergedVideoPlayerScreen extends StatefulWidget {
   const _MergedVideoPlayerScreen({required this.videoFile});
 
   @override
-  State<_MergedVideoPlayerScreen> createState() => _MergedVideoPlayerScreenState();
+  State<_MergedVideoPlayerScreen> createState() =>
+      _MergedVideoPlayerScreenState();
 }
 
 class _MergedVideoPlayerScreenState extends State<_MergedVideoPlayerScreen> {
@@ -1755,7 +1808,8 @@ class _MergedVideoPlayerScreenState extends State<_MergedVideoPlayerScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('文件路径:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('文件路径:',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       SelectableText(
                         widget.videoFile.path,

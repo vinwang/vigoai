@@ -14,8 +14,8 @@ enum MessageType {
   video,
   thinking,
   error,
-  screenplay,  // 新增：剧本类型
-  draft,      // 新增：剧本草稿类型
+  screenplay, // 新增：剧本类型
+  draft, // 新增：剧本草稿类型
 }
 
 class ChatMessage {
@@ -67,7 +67,7 @@ class ChatMessage {
 
   // 用于生成唯一 ID 的计数器，避免同一毫秒内创建的消息 ID 冲突
   static int _idCounter = 0;
-  
+
   /// 生成唯一的消息 ID
   static String _generateId(String prefix) {
     return '${prefix}_${DateTime.now().millisecondsSinceEpoch}_${_idCounter++}';
@@ -175,7 +175,7 @@ class ChatMessage {
       case MessageRole.user:
         return '你';
       case MessageRole.agent:
-        return 'AI漫导';
+        return 'VigoAI';
       case MessageRole.system:
         return '系统';
     }

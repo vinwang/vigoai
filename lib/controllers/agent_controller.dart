@@ -4,6 +4,7 @@ import '../models/agent_command.dart';
 import '../models/chat_message.dart';
 import '../services/api_service.dart';
 import '../utils/app_logger.dart';
+import '../utils/dynamic_hint_utils.dart';
 
 /// 管理 ReAct (推理 + 行动) 循环的控制器
 /// 用于 AI 智能体编排
@@ -16,7 +17,7 @@ class AgentController {
   // ============================================
   // 取消控制相关
   // ============================================
-  bool _isCancelled = false;  // 取消标志
+  bool _isCancelled = false; // 取消标志
   final StreamController<bool> _cancelController =
       StreamController<bool>.broadcast();
 
@@ -40,8 +41,7 @@ class AgentController {
     _addMessage(ChatMessage(
       id: 'welcome',
       role: MessageRole.agent,
-      content:
-          '欢迎使用 AI 漫导！告诉我你想创作什么样的视频，我会帮你实现。例如："制作一个猫咪在草地上奔跑的视频"',
+      content: '欢迎使用 VigoAI！告诉我你想创作什么样的视频，我会帮你实现。例如："制作一个二哈在草地上奔跑的视频"',
       type: MessageType.text,
     ));
   }
@@ -126,24 +126,23 @@ class AgentController {
         final contentBuffer = StringBuffer();
         final thinkingBuffer = StringBuffer();
         final showThinking = ApiConfig.USE_THINKING_MODE;
-        
+
         await _apiService.sendToGLMStream(_buildGLMHistory()).forEach((chunk) {
           // 在流式接收过程中也检查取消
           if (_isCancelled) {
             AppLogger.warn('ReAct', '接收 GLM 响应时取消');
             throw Exception('操作已取消');
           }
-          
+
           if (chunk.isThinking && showThinking) {
-            // 累积思考内容并实时更新 UI（仅在开关开启时显示）
+            // 累积思考内容（内部逻辑保留）
             thinkingBuffer.write(chunk.text);
-            // 显示思考过程（限制长度避免 UI 过长）
-            String thinkingText = thinkingBuffer.toString();
-            if (thinkingText.length > 200) {
-              // 只显示最后200个字符
-              thinkingText = '...' + thinkingText.substring(thinkingText.length - 200);
-            }
-            _updateThinkingStatus('💭 $thinkingText');
+
+            // [核心改动] 不再直接显示原始思考过程文本
+            // 显示动态提示词，让 AI 看起来在忙碌工作
+            final hint =
+                DynamicHintUtils.getRandomHint(DynamicHintUtils.chatHints);
+            _updateThinkingStatus(hint);
           } else if (chunk.isContent) {
             // 累积最终内容
             contentBuffer.write(chunk.text);
@@ -164,7 +163,8 @@ class AgentController {
           throw Exception('GLM 返回空响应');
         }
 
-        AppLogger.info('ReAct', 'GLM 响应: ${commandJson.substring(0, commandJson.length > 200 ? 200 : commandJson.length)}...');
+        AppLogger.info('ReAct',
+            'GLM 响应: ${commandJson.substring(0, commandJson.length > 200 ? 200 : commandJson.length)}...');
 
         // 移除"思考中..."状态
         _messages.removeWhere((m) => m.type == MessageType.thinking);
@@ -194,7 +194,8 @@ class AgentController {
         } else {
           AppLogger.error('ReAct', '命令执行失败: ${result.error}');
           // 将错误添加到消息历史，让下次迭代时 GLM 能知道失败了
-          _addMessage(ChatMessage.error('${command.action} 失败: ${result.error}'));
+          _addMessage(
+              ChatMessage.error('${command.action} 失败: ${result.error}'));
           // 继续下一次迭代，让 GLM 决定如何处理
           continue;
         }
@@ -262,10 +263,14 @@ class AgentController {
     // 倒序遍历找最新消息
     for (int i = _messages.length - 1; i >= 0; i--) {
       final msg = _messages[i];
-      if (latestVideo == null && msg.type == MessageType.video && msg.mediaUrl != null) {
+      if (latestVideo == null &&
+          msg.type == MessageType.video &&
+          msg.mediaUrl != null) {
         latestVideo = msg;
       }
-      if (latestImage == null && msg.type == MessageType.image && msg.mediaUrl != null) {
+      if (latestImage == null &&
+          msg.type == MessageType.image &&
+          msg.mediaUrl != null) {
         latestImage = msg;
       }
       if (latestError == null && msg.type == MessageType.error) {
@@ -281,10 +286,10 @@ class AgentController {
     // 3. 检测用户是否想要视频
     final userWantsVideo = latestUserMessage != null &&
         (latestUserMessage.content.contains('视频') ||
-         latestUserMessage.content.contains('video') ||
-         latestUserMessage.content.contains('制作') ||
-         latestUserMessage.content.contains('动画') ||
-         latestUserMessage.content.contains('生成视频'));
+            latestUserMessage.content.contains('video') ||
+            latestUserMessage.content.contains('制作') ||
+            latestUserMessage.content.contains('动画') ||
+            latestUserMessage.content.contains('生成视频'));
 
     // 4. 添加工具执行历史和结果（模拟完整对话，让 GLM 知道之前做了什么）
     if (latestError != null) {
@@ -293,15 +298,18 @@ class AgentController {
         // 图片已生成但有错误 = 视频生成失败
         history.add({
           'role': 'assistant',
-          'content': '{"action": "generate_image", "params": {"prompt": "..."}}',
+          'content':
+              '{"action": "generate_image", "params": {"prompt": "..."}}',
         });
         history.add({
           'role': 'user',
-          'content': 'TOOL_RESULT: Image generated successfully at ${latestImage.mediaUrl}.',
+          'content':
+              'TOOL_RESULT: Image generated successfully at ${latestImage.mediaUrl}.',
         });
         history.add({
           'role': 'assistant',
-          'content': '{"action": "generate_video", "params": {"image_url": "${latestImage.mediaUrl}", "prompt": "...", "seconds": "8"}}',
+          'content':
+              '{"action": "generate_video", "params": {"image_url": "${latestImage.mediaUrl}", "prompt": "...", "seconds": "8"}}',
         });
         history.add({
           'role': 'user',
@@ -314,7 +322,8 @@ class AgentController {
         // 图片生成失败
         history.add({
           'role': 'assistant',
-          'content': '{"action": "generate_image", "params": {"prompt": "..."}}',
+          'content':
+              '{"action": "generate_image", "params": {"prompt": "..."}}',
         });
         history.add({
           'role': 'user',
@@ -331,16 +340,19 @@ class AgentController {
       });
       history.add({
         'role': 'user',
-        'content': 'TOOL_RESULT: Image generated successfully: ${latestImage?.mediaUrl ?? "unknown"}',
+        'content':
+            'TOOL_RESULT: Image generated successfully: ${latestImage?.mediaUrl ?? "unknown"}',
       });
       history.add({
         'role': 'assistant',
-        'content': '{"action": "generate_video", "params": {"image_url": "${latestImage?.mediaUrl ?? ""}", "prompt": "...", "seconds": "8"}}',
+        'content':
+            '{"action": "generate_video", "params": {"image_url": "${latestImage?.mediaUrl ?? ""}", "prompt": "...", "seconds": "8"}}',
       });
       history.add({
         'role': 'user',
-        'content': 'TOOL_RESULT: Video generated successfully: ${latestVideo.mediaUrl}. '
-            'The task is complete. You MUST now call "complete" action to finish and inform the user.',
+        'content':
+            'TOOL_RESULT: Video generated successfully: ${latestVideo.mediaUrl}. '
+                'The task is complete. You MUST now call "complete" action to finish and inform the user.',
       });
       AppLogger.info('History', '视频已生成，等待完成: ${latestVideo.mediaUrl}');
     } else if (latestImage != null) {
@@ -348,26 +360,29 @@ class AgentController {
       // 关键：添加之前的 assistant 响应，让 GLM 知道它已经执行过 generate_image
       history.add({
         'role': 'assistant',
-        'content': '{"action": "generate_image", "params": {"prompt": "generated image for user request"}}',
+        'content':
+            '{"action": "generate_image", "params": {"prompt": "generated image for user request"}}',
       });
 
       if (userWantsVideo) {
         // 用户想要视频，必须调用 generate_video
         history.add({
           'role': 'user',
-          'content': 'TOOL_RESULT: Image generated successfully at ${latestImage.mediaUrl}. '
-              'The user wants a VIDEO. You have already generated the image. '
-              'NOW you MUST call "generate_video" with image_url="${latestImage.mediaUrl}". '
-              'Do NOT call generate_image again!',
+          'content':
+              'TOOL_RESULT: Image generated successfully at ${latestImage.mediaUrl}. '
+                  'The user wants a VIDEO. You have already generated the image. '
+                  'NOW you MUST call "generate_video" with image_url="${latestImage.mediaUrl}". '
+                  'Do NOT call generate_image again!',
         });
         AppLogger.info('History', '图片已生成，用户需要视频: ${latestImage.mediaUrl}');
       } else {
         // 用户只想要图片，调用 complete
         history.add({
           'role': 'user',
-          'content': 'TOOL_RESULT: Image generated successfully at ${latestImage.mediaUrl}. '
-              'The user only wanted an IMAGE. Task is complete. '
-              'You MUST now call "complete" action.',
+          'content':
+              'TOOL_RESULT: Image generated successfully at ${latestImage.mediaUrl}. '
+                  'The user only wanted an IMAGE. Task is complete. '
+                  'You MUST now call "complete" action.',
         });
         AppLogger.info('History', '图片已生成，用户只要图片: ${latestImage.mediaUrl}');
       }
@@ -376,7 +391,8 @@ class AgentController {
 
     AppLogger.info('History', '构建历史完成，共 ${history.length} 条消息');
     for (int i = 0; i < history.length; i++) {
-      AppLogger.info('History', '消息 #$i [${history[i]['role']}]: ${history[i]['content']?.substring(0, history[i]['content']!.length > 100 ? 100 : history[i]['content']!.length)}...');
+      AppLogger.info('History',
+          '消息 #$i [${history[i]['role']}]: ${history[i]['content']?.substring(0, history[i]['content']!.length > 100 ? 100 : history[i]['content']!.length)}...');
     }
     return history;
   }
@@ -385,7 +401,8 @@ class AgentController {
   AgentCommand _parseCommand(String jsonStr) {
     try {
       AppLogger.info('命令解析', '原始响应长度: ${jsonStr.length} 字符');
-      AppLogger.info('命令解析', '原始响应前300字符: ${jsonStr.substring(0, jsonStr.length > 300 ? 300 : jsonStr.length)}...');
+      AppLogger.info('命令解析',
+          '原始响应前300字符: ${jsonStr.substring(0, jsonStr.length > 300 ? 300 : jsonStr.length)}...');
 
       // GLM 可能返回思考过程 + JSON，需要提取最后的 JSON 部分
       String cleaned = jsonStr.trim();
@@ -400,7 +417,11 @@ class AgentController {
 
       // 策略3: 如果还是没找到 action，尝试查找其他命令标识
       if (extractedJson == null) {
-        for (final keyword in ['generate_image', 'generate_video', 'complete']) {
+        for (final keyword in [
+          'generate_image',
+          'generate_video',
+          'complete'
+        ]) {
           extractedJson = _extractJsonContaining(cleaned, '"$keyword"');
           if (extractedJson != null) break;
         }
@@ -462,7 +483,8 @@ class AgentController {
     int braceCount = 0;
     int endIndex = -1;
     for (int i = 0; i < potentialJson.length; i++) {
-      if (potentialJson[i] == '{') braceCount++;
+      if (potentialJson[i] == '{')
+        braceCount++;
       else if (potentialJson[i] == '}') {
         braceCount--;
         if (braceCount == 0) {
@@ -496,7 +518,8 @@ class AgentController {
       int endIndex = -1;
 
       for (int j = i; j < text.length; j++) {
-        if (text[j] == '{') braceCount++;
+        if (text[j] == '{')
+          braceCount++;
         else if (text[j] == '}') {
           braceCount--;
           if (braceCount == 0) {
@@ -533,7 +556,8 @@ class AgentController {
     int braceCount = 0;
     int endIndex = -1;
     for (int i = 0; i < potentialJson.length; i++) {
-      if (potentialJson[i] == '{') braceCount++;
+      if (potentialJson[i] == '{')
+        braceCount++;
       else if (potentialJson[i] == '}') {
         braceCount--;
         if (braceCount == 0) {
@@ -726,6 +750,14 @@ class AgentController {
 
   /// 更新或添加"思考中"状态消息
   void _updateThinkingStatus(String status) {
+    // [优化] 如果当前正在显示的就是相同的提示词，则没必要频繁通知 listeners
+    final existingThinking =
+        _messages.indexWhere((m) => m.type == MessageType.thinking);
+    if (existingThinking >= 0 &&
+        _messages[existingThinking].content == status) {
+      return;
+    }
+
     // 移除现有的思考消息（如果有）
     _messages.removeWhere((m) => m.type == MessageType.thinking);
 

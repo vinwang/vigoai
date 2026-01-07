@@ -127,13 +127,18 @@ class ConversationProvider extends ChangeNotifier {
   Future<void> saveMessage(chat.ChatMessage chatMessage) async {
     if (_currentConversation == null) return;
 
-    final id = _uuid.v4();
+    // 优先使用传入消息的 ID，确保持久化 ID 与内存 ID 一致
+    final id = chatMessage.id.isNotEmpty ? chatMessage.id : _uuid.v4();
     final now = DateTime.now();
 
     // 构建 metadata
     final metadata = <String, dynamic>{
       if (chatMessage.mediaUrl != null) 'mediaUrl': chatMessage.mediaUrl,
-      if (chatMessage.screenplay != null) 'screenplayTaskId': chatMessage.screenplay!.taskId,
+      if (chatMessage.screenplay != null)
+        'screenplay': chatMessage.screenplay!.toJson(),
+      if (chatMessage.screenplay != null)
+        'screenplayTaskId': chatMessage.screenplay!.taskId, // 保留TaskId用于兼容或快速查找
+      if (chatMessage.draft != null) 'draft': chatMessage.draft!.toJson(),
     };
 
     final message = ConversationMessage(
@@ -165,6 +170,41 @@ class ConversationProvider extends ChangeNotifier {
 
     // 缓存媒体文件（后台）
     _cacheMessageMedia(message);
+  }
+
+  /// 更新消息（将 AI 思考中状态改为最终回复）
+  Future<void> updateMessage(
+      String id, String content, chat.MessageType type) async {
+    if (_currentConversation == null) return;
+
+    final index = _currentMessages.indexWhere((m) => m.id == id);
+    if (index == -1) return;
+
+    // 1. 获取旧消息
+    final oldMessage = _currentMessages[index];
+
+    // 2. 创建更新后的消息对象
+    final updatedMessage = oldMessage.copyWith(
+      content: content,
+      type: _convertMessageType(type),
+    );
+
+    // 3. 更新 Hive 数据库
+    await _hive.updateMessage(updatedMessage);
+
+    // 4. 更新内存中的列表
+    _currentMessages[index] = updatedMessage;
+
+    // 5. 如果是最后一条消息，更新会话的预览文本
+    if (index == _currentMessages.length - 1) {
+      final updatedConv = _currentConversation!.copyWith(
+        previewText: _generatePreviewText(content),
+        updatedAt: DateTime.now(),
+      );
+      _currentConversation = updatedConv;
+      await _hive.updateConversation(updatedConv);
+      notifyListeners(); // 通知会话列表更新
+    }
   }
 
   /// 删除会话
@@ -340,7 +380,8 @@ class CacheStats {
 
   String get totalSizeFormatted {
     if (totalSize < 1024) return '$totalSize B';
-    if (totalSize < 1024 * 1024) return '${(totalSize / 1024).toStringAsFixed(1)} KB';
+    if (totalSize < 1024 * 1024)
+      return '${(totalSize / 1024).toStringAsFixed(1)} KB';
     return '${(totalSize / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 }

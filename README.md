@@ -1,4 +1,4 @@
-# 🎬 AI漫导 (DirectorAI)
+# 🎬 VigoAI 漫剧生成器
 
 > AI 漫剧制作 APP，能一键生成剧本、分镜及合成视频，让你在手机上也能快速制作漫剧
 
@@ -11,9 +11,9 @@
 
 ## ✨ 项目简介
 
-AI漫导是一款基于 Flutter 开发的移动应用，采用 **AI 智能体架构**，能够理解用户的文字描述，并自动编排多个 AI 模型协作，最终生成完整的AI 漫剧视频内容。
+VigoAI是一款基于 Flutter 开发的移动应用，采用 **AI 智能体架构**，能够理解用户的文字描述，并自动编排多个 AI 模型协作，最终生成完整的AI 漫剧视频内容。
 
-只需简单描述你的创意，AI漫导就能帮你实现！
+只需简单描述你的创意，VigoAI就能帮你实现！
 
 ```
 用户: "制作一个雪地里的冒险故事"
@@ -35,7 +35,7 @@ AI漫导是一款基于 Flutter 开发的移动应用，采用 **AI 智能体架
 
 ![](images/20260105115408.png)
 
-在对应场景的配置默认是给了 7 个，角色是给了 2 个，然后这些我都设置成可配置的了。
+在对应场景的配置默认是给了 3 个，角色是给了 2 个，然后这些我都设置成可配置的了。
 
 ![](images/AI漫剧APP-5.png)
 
@@ -72,13 +72,13 @@ AI漫导是一款基于 Flutter 开发的移动应用，采用 **AI 智能体架
 | **Dio** | HTTP 网络请求 |
 | **flutter_markdown** | Markdown 渲染 |
 
-### AI 模型集成
+### AI 模型集成（可以自己更换）
 
 | 模型 | 提供商 | 功能 |
 |------|--------|------|
-| **GLM-4.7** | 智谱 AI | 智能编排与决策 |
+| **glm-4-flash** | 智谱 AI | 智能编排与决策 |
 | **Gemini-3-Pro-Image-Preview** | Google | 文本生成图片 |
-| **Veo3.1** | Google | 图片生成视频 |
+| **sora-2** | Google | 图片生成视频 |
 
 ### 智能体架构
 
@@ -88,7 +88,7 @@ AI漫导是一款基于 Flutter 开发的移动应用，采用 **AI 智能体架
 ┌─────────────────────────────────────────────────────┐
 │                    ReAct 循环                        │
 ├─────────────────────────────────────────────────────┤
-│  1. 用户输入 → GLM-4.7 理解意图                      │
+│  1. 用户输入 → glm-4-flash 理解意图                      │
 │  2. GLM 返回下一步操作 (JSON 命令)                   │
 │  3. 执行工具调用 (图片生成 / 视频生成)               │
 │  4. 将结果反馈给 GLM                                 │
@@ -239,17 +239,6 @@ static const int _maxIterations = 10;
 3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 提交 Pull Request
-
-## star 趋势图
-
-[![Star History Chart](https://api.star-history.com/svg?repos=freestylefly/director_ai&type=Date)](https://star-history.com/#freestylefly/director_ai&Date)
-
-## 公众号
-
-微信搜 **苍何** 或扫描下方二维码关注苍何的原创公众号，回复 **AI** 即可和 18000+ 好友一同探讨AI，一同学习 AI Coding。
-
-![苍何微信公众号](images/扫码_搜索联合传播样式-标准色版.bmp)
-
 
 ## 📄 许可证
 

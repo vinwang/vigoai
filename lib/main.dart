@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +17,7 @@ import 'services/api_config_service.dart';
 void main() async {
   // 确保 Flutter 绑定初始化（必须在所有插件操作之前）
   WidgetsFlutterBinding.ensureInitialized();
+  // DartPluginRegistrant.ensureInitialized();
 
   // 初始化日志系统
   await AppLogger.initialize();
@@ -59,42 +61,42 @@ class DirectorAIApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => VideoMergeProvider()),
       ],
       child: MaterialApp(
-        title: 'AI漫导',
+        title: 'VigoAI',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,
-          // 动漫创作风格主题 - 紫色系
-          primaryColor: const Color(0xFF8B5CF6), // 创意紫
-          scaffoldBackgroundColor: const Color(0xFFF8F7FC), // 浅紫灰背景
+          // 科技感主题 - 蓝青色系
+          primaryColor: const Color(0xFF0EA5E9), // 科技蓝
+          scaffoldBackgroundColor: const Color(0xFFF0F9FF), // 浅蓝灰背景
           brightness: Brightness.light,
 
-          // 动漫风格颜色方案
+          // 科技风格颜色方案
           colorScheme: const ColorScheme.light(
-            primary: Color(0xFF8B5CF6), // 创意紫
-            secondary: Color(0xFFEC4899), // 动漫粉
-            tertiary: Color(0xFFF59E0B), // 活力金
+            primary: Color(0xFF0EA5E9), // 科技蓝 (Sky Blue)
+            secondary: Color(0xFF06B6D4), // 青色 (Cyan)
+            tertiary: Color(0xFF3B82F6), // 深蓝 (Blue)
             surface: Color(0xFFFFFFFF), // 白色卡片
-            background: Color(0xFFF8F7FC), // 浅紫灰背景
+            background: Color(0xFFF0F9FF), // 浅蓝灰背景
             error: Color(0xFFEF4444),
             onPrimary: Colors.white,
-            onSurface: Color(0xFF1C1C1E),
-            onBackground: Color(0xFF1C1C1E),
+            onSurface: Color(0xFF0F172A), // 深色文字
+            onBackground: Color(0xFF0F172A),
           ),
 
-          // AppBar - 毛玻璃效果
+          // AppBar - 科技感毛玻璃效果
           appBarTheme: AppBarTheme(
             centerTitle: true,
             elevation: 0,
             scrolledUnderElevation: 0,
             backgroundColor: Colors.white.withOpacity(0.85),
-            foregroundColor: const Color(0xFF8B5CF6),
+            foregroundColor: const Color(0xFF0EA5E9),
             titleTextStyle: const TextStyle(
-              color: Color(0xFF1C1C1E),
+              color: Color(0xFF0F172A),
               fontSize: 17,
               fontWeight: FontWeight.w600,
               letterSpacing: -0.5,
             ),
-            iconTheme: const IconThemeData(color: Color(0xFF8B5CF6)),
+            iconTheme: const IconThemeData(color: Color(0xFF0EA5E9)),
             systemOverlayStyle: const SystemUiOverlayStyle(
               statusBarBrightness: Brightness.light,
               statusBarIconBrightness: Brightness.dark,
@@ -122,19 +124,20 @@ class DirectorAIApp extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF8B5CF6), width: 2),
+              borderSide: const BorderSide(color: Color(0xFF0EA5E9), width: 2),
             ),
             hintStyle: const TextStyle(
               color: Color(0xFF9CA3AF),
               fontSize: 16,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
 
           // 按钮样式
           filledButtonTheme: FilledButtonThemeData(
             style: ButtonStyle(
-              backgroundColor: const WidgetStatePropertyAll(Color(0xFF8B5CF6)),
+              backgroundColor: const WidgetStatePropertyAll(Color(0xFF0EA5E9)),
               foregroundColor: const WidgetStatePropertyAll(Colors.white),
               shape: WidgetStateProperty.all(
                 RoundedRectangleBorder(
@@ -157,7 +160,7 @@ class DirectorAIApp extends StatelessWidget {
           // 文本按钮样式
           textButtonTheme: TextButtonThemeData(
             style: ButtonStyle(
-              foregroundColor: const WidgetStatePropertyAll(Color(0xFF8B5CF6)),
+              foregroundColor: const WidgetStatePropertyAll(Color(0xFF0EA5E9)),
               padding: const WidgetStatePropertyAll(
                 EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               ),
@@ -172,13 +175,13 @@ class DirectorAIApp extends StatelessWidget {
 
           // 图标样式
           iconTheme: const IconThemeData(
-            color: Color(0xFF8B5CF6),
+            color: Color(0xFF0EA5E9),
             size: 24,
           ),
 
           // FloatingActionButton
           floatingActionButtonTheme: FloatingActionButtonThemeData(
-            backgroundColor: const Color(0xFF8B5CF6),
+            backgroundColor: const Color(0xFF0EA5E9),
             foregroundColor: Colors.white,
             elevation: 6,
             shape: RoundedRectangleBorder(
@@ -192,59 +195,59 @@ class DirectorAIApp extends StatelessWidget {
             thickness: 1,
           ),
 
-          // iOS 文字样式
+          // 文字样式 - 调整为常规大小
           textTheme: const TextTheme(
             headlineLarge: TextStyle(
-              fontSize: 34,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
-              color: Color(0xFF1C1C1E),
-            ),
-            headlineMedium: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               letterSpacing: -0.5,
-              color: Color(0xFF1C1C1E),
+              color: Color(0xFF0F172A),
+            ),
+            headlineMedium: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+              color: Color(0xFF0F172A),
             ),
             titleLarge: TextStyle(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.w600,
-              letterSpacing: -0.5,
-              color: Color(0xFF1C1C1E),
+              letterSpacing: -0.4,
+              color: Color(0xFF0F172A),
             ),
             titleMedium: TextStyle(
-              fontSize: 17,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
-              letterSpacing: -0.5,
-              color: Color(0xFF1C1C1E),
+              letterSpacing: -0.3,
+              color: Color(0xFF0F172A),
             ),
             bodyLarge: TextStyle(
-              fontSize: 17,
-              letterSpacing: -0.4,
-              color: Color(0xFF1C1C1E),
+              fontSize: 16,
+              letterSpacing: -0.3,
+              color: Color(0xFF0F172A),
             ),
             bodyMedium: TextStyle(
-              fontSize: 15,
+              fontSize: 14,
               letterSpacing: -0.2,
-              color: Color(0xFF1C1C1E),
+              color: Color(0xFF0F172A),
             ),
             bodySmall: TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               letterSpacing: -0.1,
               color: Color(0xFF8E8E93),
             ),
           ),
 
-          // iOS 列表样式
+          // 列表样式
           listTileTheme: const ListTileThemeData(
             contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             titleTextStyle: TextStyle(
-              fontSize: 17,
+              fontSize: 15,
               fontWeight: FontWeight.w400,
-              color: Color(0xFF1C1C1E),
+              color: Color(0xFF0F172A),
             ),
             subtitleTextStyle: TextStyle(
-              fontSize: 15,
+              fontSize: 13,
               color: Color(0xFF8E8E93),
             ),
           ),

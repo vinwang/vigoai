@@ -5,16 +5,19 @@ import '../controllers/screenplay_controller.dart';
 import '../controllers/screenplay_draft_controller.dart';
 import '../models/chat_message.dart';
 import '../models/screenplay_draft.dart';
+import '../models/screenplay.dart';
 import '../models/modification_plan.dart';
 import '../models/script.dart';
+import '../models/conversation_message.dart';
 import '../services/api_service.dart';
 import '../services/api_config_service.dart';
 import '../utils/app_logger.dart';
+import '../utils/dynamic_hint_utils.dart';
 import 'conversation_provider.dart';
 
 /// 用户上传的图片信息
 class UserImage {
-  final String base64;  // 移除 File 依赖，直接存储 base64
+  final String base64; // 移除 File 依赖，直接存储 base64
   final String? mimeType;
 
   UserImage({
@@ -39,7 +42,8 @@ class UserImage {
 /// 管理聊天状态和剧本生成的 Provider
 class ChatProvider extends ChangeNotifier {
   final ScreenplayController _screenplayController = ScreenplayController();
-  final ScreenplayDraftController _draftController = ScreenplayDraftController();
+  final ScreenplayDraftController _draftController =
+      ScreenplayDraftController();
   final ApiService _apiService = ApiService();
   final ImagePicker _imagePicker = ImagePicker();
   final List<ChatMessage> _messages = [];
@@ -78,6 +82,133 @@ class ChatProvider extends ChangeNotifier {
   /// 设置会话管理器（用于持久化消息）
   void setConversationProvider(ConversationProvider? provider) {
     _conversationProvider = provider;
+
+    // 从 ConversationProvider 恢复历史消息
+    if (provider != null) {
+      _messages.clear(); // 无论是否有历史消息，先清空
+
+      if (provider.currentMessages.isNotEmpty) {
+        // 将 ConversationMessage 转换为 ChatMessage
+        for (final convMsg in provider.currentMessages) {
+          try {
+            final chatMsg = _convertConversationMessage(convMsg);
+            if (chatMsg != null) {
+              _messages.add(chatMsg);
+            }
+          } catch (e) {
+            AppLogger.warn('ChatProvider', '恢复消息失败: $e');
+          }
+        }
+        AppLogger.info('ChatProvider', '已恢复 ${_messages.length} 条历史消息');
+
+        // 恢复应用状态（_currentDraft 等）
+        // 倒序遍历找到最新的草稿
+        try {
+          final lastDraftMsg = _messages.lastWhere(
+            (m) => m.type == MessageType.draft && m.draft != null,
+            orElse: () => ChatMessage(
+                id: '',
+                role: MessageRole.system,
+                content: '',
+                type: MessageType.text),
+          );
+
+          if (lastDraftMsg.type == MessageType.draft) {
+            _currentDraft = lastDraftMsg.draft;
+            AppLogger.info(
+                'ChatProvider', '已恢复当前剧本草稿: ${_currentDraft?.title}');
+          }
+        } catch (_) {}
+      } else {
+        AppLogger.info('ChatProvider', '当前无历史消息');
+      }
+      notifyListeners();
+    }
+  }
+
+  /// 将 ConversationMessage 转换为 ChatMessage
+  ChatMessage? _convertConversationMessage(ConversationMessage convMsg) {
+    // 跳过思考中的消息（不需要恢复）
+    if (convMsg.type == ConversationMessageType.thinking) {
+      return null;
+    }
+
+    final role = convMsg.isUser ? MessageRole.user : MessageRole.agent;
+
+    switch (convMsg.type) {
+      case ConversationMessageType.text:
+        String? mediaUrl;
+        MessageType type = MessageType.text;
+
+        if (convMsg.metadata != null &&
+            convMsg.metadata!.containsKey('mediaUrl')) {
+          mediaUrl = convMsg.metadata!['mediaUrl'];
+          if (mediaUrl != null && mediaUrl.isNotEmpty) {
+            final lower = mediaUrl.toLowerCase();
+            if (lower.endsWith('.mp4') || lower.endsWith('.mov')) {
+              type = MessageType.video;
+            } else if (lower.endsWith('.png') ||
+                lower.endsWith('.jpg') ||
+                lower.endsWith('.jpeg') ||
+                lower.endsWith('.webp')) {
+              type = MessageType.image;
+            }
+          }
+        }
+
+        return ChatMessage(
+          id: convMsg.id,
+          role: role,
+          content: convMsg.content,
+          type: type,
+          mediaUrl: mediaUrl,
+        );
+
+      case ConversationMessageType.error:
+        return ChatMessage(
+          id: convMsg.id,
+          role: MessageRole.agent,
+          content: convMsg.content,
+          type: MessageType.error,
+        );
+
+      case ConversationMessageType.draft:
+        // 从 metadata 恢复草稿
+        if (convMsg.metadata != null &&
+            convMsg.metadata!.containsKey('draft')) {
+          try {
+            final draftJson =
+                Map<String, dynamic>.from(convMsg.metadata!['draft'] as Map);
+            final draft = ScreenplayDraft.fromJson(draftJson);
+            return ChatMessage.draft(draft)
+                .copyWith(id: convMsg.id, timestamp: convMsg.createdAt);
+          } catch (e) {
+            AppLogger.warn('ChatProvider', '恢复草稿失败: $e');
+            return null;
+          }
+        }
+        return null;
+
+      case ConversationMessageType.screenplay:
+        // 从 metadata 恢复剧本
+        if (convMsg.metadata != null &&
+            convMsg.metadata!.containsKey('screenplay')) {
+          try {
+            final screenplayJson = Map<String, dynamic>.from(
+                convMsg.metadata!['screenplay'] as Map);
+            final screenplay = Screenplay.fromJson(screenplayJson);
+            return ChatMessage.screenplay(screenplay)
+                .copyWith(id: convMsg.id, timestamp: convMsg.createdAt);
+          } catch (e) {
+            AppLogger.warn('ChatProvider', '恢复剧本失败: $e');
+            return null;
+          }
+        }
+        return null;
+
+      case ConversationMessageType.thinking:
+        return null;
+    }
   }
 
   ChatProvider() {
@@ -85,7 +216,7 @@ class ChatProvider extends ChangeNotifier {
     _addMessage(ChatMessage(
       id: 'welcome',
       role: MessageRole.agent,
-      content: '欢迎使用 AI 漫导！告诉我你想创作什么样的视频，我会帮你规划剧本并生成。例如："生成一只猫打架的视频"',
+      content: '欢迎使用 VigoAI！告诉我你想创作什么样的视频，我会帮你规划剧本并生成。例如："生成两只狗打架的视频"',
       type: MessageType.text,
     ));
 
@@ -93,11 +224,14 @@ class ChatProvider extends ChangeNotifier {
     _screenplayController.screenplayStream.listen((screenplay) {
       // 更新或添加剧本消息
       final existingIndex = _messages.indexWhere(
-        (m) => m.type == MessageType.screenplay && m.screenplay?.taskId == screenplay.taskId,
+        (m) =>
+            m.type == MessageType.screenplay &&
+            m.screenplay?.taskId == screenplay.taskId,
       );
 
       if (existingIndex >= 0) {
-        _messages[existingIndex] = _messages[existingIndex].updateScreenplay(screenplay);
+        _messages[existingIndex] =
+            _messages[existingIndex].updateScreenplay(screenplay);
       } else {
         _addMessage(ChatMessage.screenplay(screenplay));
       }
@@ -132,10 +266,16 @@ class ChatProvider extends ChangeNotifier {
     final lowerMessage = message.toLowerCase();
     // 检测视频生成相关关键词
     final videoKeywords = [
-      '生成视频', '制作视频', '视频',
-      '生成动画', '制作动画',
-      '帮我做', '帮我生成',
-      '创建视频', 'create video',
+      '生成视频',
+      '制作视频',
+      '视频',
+      '生成动画',
+      '制作动画',
+      '帮我做',
+      '帮我生成',
+      '创建视频',
+      '开始生成',
+      'create video',
     ];
     return videoKeywords.any((keyword) => lowerMessage.contains(keyword));
   }
@@ -161,14 +301,16 @@ class ChatProvider extends ChangeNotifier {
           .where((m) =>
               m.type == MessageType.text &&
               m.role == MessageRole.user &&
-              m.id != messageId)  // 排除当前正在生成的流式消息
+              m.id != messageId) // 排除当前正在生成的流式消息
           .take(5)
           .toList();
 
-      final recentMessages = userMessages.map((m) => {
-            'role': 'user',
-            'content': m.content,
-          }).toList();
+      final recentMessages = userMessages
+          .map((m) => {
+                'role': 'user',
+                'content': m.content,
+              })
+          .toList();
 
       // 获取用户上传的图片（如果有）
       final userImage = _userImages.isNotEmpty ? _userImages.first : null;
@@ -179,12 +321,14 @@ class ChatProvider extends ChangeNotifier {
       final thinkingBuffer = StringBuffer();
       final contentBuffer = StringBuffer();
 
-      await _apiService.chatWithGLMImageSupport(
+      await _apiService
+          .chatWithGLMImageSupport(
         userMessage: message,
         imageBase64: imageBase64,
         imageMimeType: imageMimeType,
         conversationHistory: recentMessages,
-      ).forEach((chunk) {
+      )
+          .forEach((chunk) {
         if (chunk.isThinking) {
           thinkingBuffer.write(chunk.text);
           // 实时更新消息内容
@@ -192,12 +336,14 @@ class ChatProvider extends ChangeNotifier {
         } else if (chunk.isContent) {
           contentBuffer.write(chunk.text);
           // 实时更新消息内容（思考 + 内容）
-          _updateStreamMessage(messageId, thinkingBuffer.toString(), contentBuffer.toString());
+          _updateStreamMessage(
+              messageId, thinkingBuffer.toString(), contentBuffer.toString());
         }
       });
 
       // 完成后，将消息类型改为普通文本消息
-      _finalizeStreamMessage(messageId, thinkingBuffer.toString(), contentBuffer.toString());
+      _finalizeStreamMessage(
+          messageId, thinkingBuffer.toString(), contentBuffer.toString());
 
       // 注意：普通聊天模式下不自动清除用户图片，用户可能想继续问关于这张图片的问题
       // 只有在开始视频生成时才清除图片
@@ -217,30 +363,25 @@ class ChatProvider extends ChangeNotifier {
     if (index >= 0) {
       final sb = StringBuffer();
 
-      // 添加思考过程（如果有）
-      if (thinking.isNotEmpty) {
-        sb.writeln('<details>');
-        sb.writeln('<summary>💭 思考过程</summary>');
-        sb.writeln();
-        sb.writeln(thinking);
-        sb.writeln();
-        sb.writeln('</details>');
-        sb.writeln();
+      // [核心改动] 不再直接显示原始思考过程文本
+      // 如果正在思考中且没有正文内容，显示动态提示词
+      if (thinking.isNotEmpty && content.isEmpty) {
+        // 每当思考内容有更新时，我们可以随机更换一个提示词，让界面看起来在动
+        final hint = DynamicHintUtils.getRandomHint(DynamicHintUtils.chatHints);
+        _messages[index] = ChatMessage.thinking(hint).copyWith(id: messageId);
+        notifyListeners();
+        return;
       }
 
-      // 添加分隔线（如果有思考和内容）
-      if (thinking.isNotEmpty && content.isNotEmpty) {
-        sb.writeln('---');
-        sb.writeln();
-      }
-
-      // 添加最终内容（如果有）
+      // 一旦有正文内容，只显示正文，彻底移除 <details> 思考块
       if (content.isNotEmpty) {
         sb.write(content);
       }
 
-      // 关键：一旦有内容输出，就把类型改成 text，这样就不会被 _addMessage 误删
-      final newType = content.isNotEmpty ? MessageType.text : MessageType.thinking;
+      // 一旦有内容输出，就把类型改成 text
+      final newType =
+          content.isNotEmpty ? MessageType.text : MessageType.thinking;
+
       _messages[index] = ChatMessage(
         id: messageId,
         role: MessageRole.agent,
@@ -253,17 +394,26 @@ class ChatProvider extends ChangeNotifier {
 
   /// 完成流式消息，转为普通文本消息
   /// 注意：只保留最终内容，不保留思考过程（思考过程只是临时显示）
-  void _finalizeStreamMessage(String messageId, String thinking, String content) {
+  void _finalizeStreamMessage(
+      String messageId, String thinking, String content) {
     final index = _messages.indexWhere((m) => m.id == messageId);
     if (index >= 0) {
       // 只保留最终内容，删除思考过程
+      final finalContent = content.isEmpty ? '（无回复内容）' : content;
+
       _messages[index] = ChatMessage(
         id: messageId,
         role: MessageRole.agent,
-        content: content.isEmpty ? '（无回复内容）' : content,
+        content: finalContent,
         type: MessageType.text,
       );
       notifyListeners();
+
+      // 同步更新数据库（将 thinking 类型改为 text 类型）
+      if (_conversationProvider != null) {
+        _conversationProvider!
+            .updateMessage(messageId, finalContent, MessageType.text);
+      }
     }
   }
 
@@ -304,21 +454,32 @@ class ChatProvider extends ChangeNotifier {
   bool _isAssetModificationRequest(String message) {
     final lowerMessage = message.toLowerCase();
     final modificationKeywords = [
-      '修改', '改', '换个', '重新生成',
-      '场景', '角色', '背景',
-      '调整', '优化', '换掉',
-      '把', '将', '让',
+      '修改',
+      '改',
+      '换个',
+      '重新生成',
+      '场景',
+      '角色',
+      '背景',
+      '调整',
+      '优化',
+      '换掉',
+      '把',
+      '将',
+      '让',
     ];
 
     // 检查是否包含修改关键词和场景/角色相关词汇
-    final hasModificationKeyword = modificationKeywords.any((keyword) => lowerMessage.contains(keyword));
+    final hasModificationKeyword =
+        modificationKeywords.any((keyword) => lowerMessage.contains(keyword));
     final hasSceneOrCharacter = lowerMessage.contains('场景') ||
         lowerMessage.contains('scene') ||
         lowerMessage.contains('角色') ||
         lowerMessage.contains('character') ||
         RegExp(r'[0-9]+[号场]').hasMatch(message);
 
-    return hasModificationKeyword && (hasSceneOrCharacter || _currentDraft!.scenes.isNotEmpty);
+    return hasModificationKeyword &&
+        (hasSceneOrCharacter || _currentDraft!.scenes.isNotEmpty);
   }
 
   /// 处理素材修改请求
@@ -350,7 +511,8 @@ class ChatProvider extends ChangeNotifier {
   }
 
   /// 分析修改请求，提取修改意图
-  Future<ModificationPlan> _analyzeModificationRequest(String userRequest) async {
+  Future<ModificationPlan> _analyzeModificationRequest(
+      String userRequest) async {
     // 构建提示词
     final prompt = '''
 用户请求修改: $userRequest
@@ -375,7 +537,9 @@ class ChatProvider extends ChangeNotifier {
 
     try {
       final responseStream = _apiService.sendToGLMStream(
-        [{'role': 'user', 'content': prompt}],
+        [
+          {'role': 'user', 'content': prompt}
+        ],
         systemPrompt: '''你是一个专业的剧本编辑助手。请分析用户的修改请求，返回 JSON 格式的修改计划。
 只返回 JSON 对象，不要有其他内容。''',
       );
@@ -424,10 +588,12 @@ class ChatProvider extends ChangeNotifier {
   }
 
   /// 执行修改
-  Future<void> _executeModification(ModificationPlan plan, String messageId) async {
+  Future<void> _executeModification(
+      ModificationPlan plan, String messageId) async {
     if (plan.type == 'scene_narration' && plan.sceneId != null) {
       // 修改场景旁白
-      _currentDraft = _currentDraft!.updateSceneNarration(plan.sceneId!, plan.changes);
+      _currentDraft =
+          _currentDraft!.updateSceneNarration(plan.sceneId!, plan.changes);
       _draftController.updateSceneNarration(plan.sceneId!, plan.changes);
 
       _updateStreamMessage(messageId, '已修改场景${plan.sceneId}的旁白', plan.changes);
@@ -444,7 +610,8 @@ class ChatProvider extends ChangeNotifier {
       _addMessage(ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         role: MessageRole.agent,
-        content: '已收到修改请求: ${plan.changes}\n\n我理解您想${plan.type}，但目前支持的场景修改类型包括:\n- 修改场景旁白\n- 修改角色描述',
+        content:
+            '已收到修改请求: ${plan.changes}\n\n我理解您想${plan.type}，但目前支持的场景修改类型包括:\n- 修改场景旁白\n- 修改角色描述',
         type: MessageType.text,
       ));
     }
@@ -469,10 +636,21 @@ class ChatProvider extends ChangeNotifier {
       // 准备用户图片的 base64 列表
       final userImageUrls = _userImages.map((img) => img.toLmFormat()).toList();
 
-      // 开始生成剧本（传递用户图片）
+      // 准备对话历史（不包含当前正在处理的用户指令）
+      final recentHistory = _messages
+          .where((m) =>
+              m.role == MessageRole.user &&
+              m.type == MessageType.text &&
+              m.content != message)
+          .take(5)
+          .map((m) => {'role': 'user', 'content': m.content})
+          .toList();
+
+      // 开始生成剧本（传递用户图片和对话历史）
       final screenplay = await _screenplayController.generateScreenplay(
         message,
         userImages: userImageUrls.isNotEmpty ? userImageUrls : null,
+        history: recentHistory,
         onProgress: (progress, status) {
           _progress = progress;
           _progressStatus = status;
@@ -505,7 +683,8 @@ class ChatProvider extends ChangeNotifier {
 
   /// 更新"思考中"消息的状态
   void _updateThinkingMessage(String status) {
-    final thinkingIndex = _messages.indexWhere((m) => m.type == MessageType.thinking);
+    final thinkingIndex =
+        _messages.indexWhere((m) => m.type == MessageType.thinking);
     if (thinkingIndex >= 0) {
       _messages[thinkingIndex] = ChatMessage.thinking(status);
     }
@@ -545,7 +724,7 @@ class ChatProvider extends ChangeNotifier {
         if (image.path.toLowerCase().endsWith('.png')) {
           mimeType = 'image/png';
         } else if (image.path.toLowerCase().endsWith('.jpg') ||
-                   image.path.toLowerCase().endsWith('.jpeg')) {
+            image.path.toLowerCase().endsWith('.jpeg')) {
           mimeType = 'image/jpeg';
         } else if (image.path.toLowerCase().endsWith('.webp')) {
           mimeType = 'image/webp';
@@ -750,7 +929,8 @@ class ChatProvider extends ChangeNotifier {
       return;
     }
 
-    final hasPending = screenplay.scenes.any((s) => s.status == SceneStatus.pending);
+    final hasPending =
+        screenplay.scenes.any((s) => s.status == SceneStatus.pending);
     if (!hasPending) {
       _errorMessage = '没有待处理的场景';
       notifyListeners();
@@ -824,7 +1004,7 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
 
     // 保存到会话管理器（持久化）
-    if (_conversationProvider != null && message.type != MessageType.thinking) {
+    if (_conversationProvider != null) {
       _conversationProvider!.saveMessage(message);
     }
   }
@@ -850,9 +1030,20 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // 准备对话历史
+      final recentHistory = _messages
+          .where((m) =>
+              m.role == MessageRole.user &&
+              m.type == MessageType.text &&
+              m.content != userPrompt)
+          .take(5)
+          .map((m) => {'role': 'user', 'content': m.content})
+          .toList();
+
       final draft = await _draftController.generateDraft(
         userPrompt,
         userImages: _userImages,
+        history: recentHistory,
       );
 
       // 移除"正在生成"消息
@@ -866,7 +1057,8 @@ class ChatProvider extends ChangeNotifier {
 
       // 立即生成角色设定，这样用户在剧本确认页面就能看到
       try {
-        final userImageUrls = _userImages.map((img) => img.toLmFormat()).toList();
+        final userImageUrls =
+            _userImages.map((img) => img.toLmFormat()).toList();
         await _draftController.generateCharacterSheets(
           userImages: userImageUrls.isNotEmpty ? userImageUrls : null,
           onProgress: (progress, status) {
@@ -946,7 +1138,8 @@ class ChatProvider extends ChangeNotifier {
         _progressStatus = '正在生成角色设定...';
         notifyListeners();
 
-        final userImageUrls = _userImages.map((img) => img.toLmFormat()).toList();
+        final userImageUrls =
+            _userImages.map((img) => img.toLmFormat()).toList();
 
         try {
           await _draftController.generateCharacterSheets(
@@ -971,7 +1164,8 @@ class ChatProvider extends ChangeNotifier {
       _progressStatus = '正在确认剧本...';
       notifyListeners();
 
-      final confirmedScreenplay = await _draftController.confirmDraft(_currentDraft!.taskId);
+      final confirmedScreenplay =
+          await _draftController.confirmDraft(_currentDraft!.taskId);
 
       // 步骤3: 准备用户图片的 base64 列表（用于场景1图生图）
       final userImageUrls = _userImages.map((img) => img.toLmFormat()).toList();
@@ -987,14 +1181,16 @@ class ChatProvider extends ChangeNotifier {
             characterImageUrls.add(refUrl);
           }
         }
-        AppLogger.info('ChatProvider', '提取角色组合三视图: ${characterImageUrls.length} 张');
+        AppLogger.info(
+            'ChatProvider', '提取角色组合三视图: ${characterImageUrls.length} 张');
       }
 
       // 步骤5: 使用 ScreenplayController 生成图片和视频
       await _screenplayController.generateFromConfirmed(
         confirmedScreenplay,
         userImages: userImageUrls.isNotEmpty ? userImageUrls : null,
-        characterImageUrls: characterImageUrls.isNotEmpty ? characterImageUrls : null,
+        characterImageUrls:
+            characterImageUrls.isNotEmpty ? characterImageUrls : null,
         onProgress: (progress, status) {
           _progress = 0.2 + progress * 0.8; // 视频生成占总进度的80%
           _progressStatus = status;
@@ -1005,7 +1201,8 @@ class ChatProvider extends ChangeNotifier {
       // 清除用户上传的参考图片
       clearUserImages();
 
-      AppLogger.success('ChatProvider', '视频生成完成: ${confirmedScreenplay.scriptTitle}');
+      AppLogger.success(
+          'ChatProvider', '视频生成完成: ${confirmedScreenplay.scriptTitle}');
     } finally {
       _isProcessing = false;
       notifyListeners();
@@ -1041,6 +1238,17 @@ class ChatProvider extends ChangeNotifier {
       _isProcessing = false;
       notifyListeners();
     }
+  }
+
+  /// 清除当前会话的所有状态
+  void resetConversationState() {
+    _messages.clear();
+    _userImages.clear();
+    _currentDraft = null;
+    _errorMessage = null;
+    _isProcessing = false;
+    _isCancelling = false;
+    notifyListeners();
   }
 
   @override

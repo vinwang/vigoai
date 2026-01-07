@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/conversation.dart';
 import '../providers/conversation_provider.dart';
+import '../providers/chat_provider.dart';
 import '../screens/settings_screen.dart';
+import '../screens/media_gallery_screen.dart';
 
 /// 会话列表 Drawer
 class ConversationListDrawer extends StatelessWidget {
@@ -53,11 +55,11 @@ class ConversationListDrawer extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [const Color(0xFF8B5CF6), const Color(0xFFEC4899)],
+          colors: [const Color(0xFF0EA5E9), const Color(0xFF06B6D4)],
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF8B5CF6).withOpacity(0.3),
+            color: const Color(0xFF0EA5E9).withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -86,7 +88,7 @@ class ConversationListDrawer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'AI 漫导',
+                  'VigoAI',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -124,7 +126,7 @@ class ConversationListDrawer extends StatelessWidget {
   Widget _buildLoadingState() {
     return const Center(
       child: CircularProgressIndicator(
-        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0EA5E9)),
       ),
     );
   }
@@ -153,7 +155,7 @@ class ConversationListDrawer extends StatelessWidget {
             icon: const Icon(Icons.add),
             label: const Text('创建新对话'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF8B5CF6),
+              backgroundColor: const Color(0xFF0EA5E9),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
@@ -165,7 +167,8 @@ class ConversationListDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildConversationList(BuildContext context, ConversationProvider provider) {
+  Widget _buildConversationList(
+      BuildContext context, ConversationProvider provider) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: provider.conversations.length,
@@ -194,55 +197,117 @@ class ConversationListDrawer extends StatelessWidget {
           ),
         ),
       ),
-      child: InkWell(
-        onTap: () => _openSettings(context),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+      child: Column(
+        children: [
+          // 我的画廊
+          InkWell(
+            onTap: () {
+              Navigator.pop(context); // 关闭 drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const MediaGalleryScreen()),
+              );
+            },
             borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.photo_library_outlined,
+                    color: Colors.white.withOpacity(0.7),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '我的画廊',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    Icons.chevron_right,
+                    color: Colors.white.withOpacity(0.5),
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
           ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.settings_outlined,
-                color: Colors.white.withOpacity(0.7),
-                size: 20,
+          const SizedBox(height: 12),
+          // 设置
+          InkWell(
+            onTap: () => _openSettings(context),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 12),
-              Text(
-                '设置',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.settings_outlined,
+                    color: Colors.white.withOpacity(0.7),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '设置',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    Icons.chevron_right,
+                    color: Colors.white.withOpacity(0.5),
+                    size: 18,
+                  ),
+                ],
               ),
-              const Spacer(),
-              Icon(
-                Icons.chevron_right,
-                color: Colors.white.withOpacity(0.5),
-                size: 18,
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  void _createNewConversation(BuildContext context, ConversationProvider provider) async {
+  void _createNewConversation(
+      BuildContext context, ConversationProvider provider) async {
     Navigator.pop(context); // 关闭 drawer
     await provider.createNewConversation();
+
+    if (context.mounted) {
+      // 显式更新 ChatProvider，触发消息清空/加载
+      context.read<ChatProvider>().setConversationProvider(provider);
+    }
   }
 
-  void _selectConversation(BuildContext context, ConversationProvider provider, String conversationId) async {
+  void _selectConversation(BuildContext context, ConversationProvider provider,
+      String conversationId) async {
     Navigator.pop(context); // 关闭 drawer
     await provider.switchConversation(conversationId);
+
+    if (context.mounted) {
+      // 显式更新 ChatProvider，触发消息清空/加载
+      context.read<ChatProvider>().setConversationProvider(provider);
+    }
   }
 
-  void _deleteConversation(BuildContext context, ConversationProvider provider, Conversation conversation) async {
+  void _deleteConversation(BuildContext context, ConversationProvider provider,
+      Conversation conversation) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -309,12 +374,12 @@ class ConversationItem extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: isSelected
-            ? const Color(0xFF8B5CF6).withOpacity(0.15)
+            ? const Color(0xFF0EA5E9).withOpacity(0.15)
             : Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isSelected
-              ? const Color(0xFF8B5CF6).withOpacity(0.5)
+              ? const Color(0xFF0EA5E9).withOpacity(0.5)
               : Colors.transparent,
           width: isSelected ? 1.5 : 0,
         ),
@@ -352,14 +417,15 @@ class ConversationItem extends StatelessWidget {
                         if (conversation.isPinned)
                           Container(
                             margin: const EdgeInsets.only(left: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF8B5CF6).withOpacity(0.2),
+                              color: const Color(0xFF0EA5E9).withOpacity(0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: const Icon(
                               Icons.push_pin,
-                              color: Color(0xFF8B5CF6),
+                              color: Color(0xFF0EA5E9),
                               size: 10,
                             ),
                           ),
@@ -432,7 +498,7 @@ class ConversationItem extends StatelessWidget {
       height: 50,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+          colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
         ),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -471,9 +537,13 @@ class ConversationItem extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                conversation.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                conversation.isPinned
+                    ? Icons.push_pin
+                    : Icons.push_pin_outlined,
                 size: 18,
-                color: conversation.isPinned ? const Color(0xFF8B5CF6) : Colors.white70,
+                color: conversation.isPinned
+                    ? const Color(0xFF0EA5E9)
+                    : Colors.white70,
               ),
               const SizedBox(width: 12),
               Text(
@@ -487,7 +557,8 @@ class ConversationItem extends StatelessWidget {
           value: 'delete',
           child: Row(
             children: [
-              const Icon(Icons.delete_outline, size: 18, color: Color(0xFFF87171)),
+              const Icon(Icons.delete_outline,
+                  size: 18, color: Color(0xFFF87171)),
               const SizedBox(width: 12),
               const Text('删除', style: TextStyle(color: Color(0xFFF87171))),
             ],

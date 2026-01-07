@@ -43,7 +43,8 @@ class VideoPlayerManager {
       final elapsed = now.difference(_lastInitTime!);
       if (elapsed < _minInitInterval) {
         final remaining = (_minInitInterval - elapsed).inMilliseconds;
-        debugPrint('🎬 拒绝初始化请求：距离上次初始化仅 ${elapsed.inMilliseconds}ms，需等待 ${remaining}ms');
+        debugPrint(
+            '🎬 拒绝初始化请求：距离上次初始化仅 ${elapsed.inMilliseconds}ms，需等待 ${remaining}ms');
         return false;
       }
     }
@@ -54,7 +55,9 @@ class VideoPlayerManager {
     }
 
     // 释放之前的播放器 - 给足够时间让硬件解码器释放
-    if (_currentPlayer != null && _currentPlayer != player && _currentPlayer!.mounted) {
+    if (_currentPlayer != null &&
+        _currentPlayer != player &&
+        _currentPlayer!.mounted) {
       debugPrint('🎬 释放之前的播放器资源，等待硬件解码器释放');
       _currentPlayer!._disposePlayer();
       // 强制延迟 500ms，确保硬件资源完全释放
@@ -79,7 +82,9 @@ class VideoPlayerManager {
   }
 
   void registerPlayer(_VideoPlayerState player) {
-    if (_currentPlayer != null && _currentPlayer != player && _currentPlayer!.mounted) {
+    if (_currentPlayer != null &&
+        _currentPlayer != player &&
+        _currentPlayer!.mounted) {
       _currentPlayer!._pauseVideo();
     }
     _currentPlayer = player;
@@ -96,7 +101,7 @@ class VideoPlayerManager {
     _currentPlayer = null;
     _isInitializing = false;
   }
-  
+
   /// 释放所有视频播放器资源（用于其他页面需要硬件资源时，如录屏）
   void releaseAllResources() {
     if (_currentPlayer != null && _currentPlayer!.mounted) {
@@ -128,10 +133,15 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     // 初始化会话管理器并设置到 ChatProvider
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final conversationProvider = Provider.of<ConversationProvider>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final conversationProvider =
+          Provider.of<ConversationProvider>(context, listen: false);
       final chatProvider = Provider.of<ChatProvider>(context, listen: false);
-      conversationProvider.initialize();
+
+      // 等待 ConversationProvider 初始化完成
+      await conversationProvider.initialize();
+
+      // 然后恢复消息到 ChatProvider
       chatProvider.setConversationProvider(conversationProvider);
     });
   }
@@ -165,8 +175,8 @@ class _ChatScreenState extends State<ChatScreen> {
       // 检查用户是否正在滚动或者不在底部
       final isNearBottom = _scrollController.hasClients &&
           (_scrollController.position.maxScrollExtent -
-                  _scrollController.position.pixels)
-              < 100;
+                  _scrollController.position.pixels) <
+              100;
 
       // 只有当用户不在手动滚动，或者接近底部时才自动滚动
       if (!_isUserScrolling || isNearBottom) {
@@ -241,10 +251,16 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isVideoGenerationRequest(String message) {
     final lowerMessage = message.toLowerCase();
     final videoKeywords = [
-      '生成视频', '制作视频', '视频',
-      '生成动画', '制作动画',
-      '帮我做', '帮我生成',
-      '创建视频', 'create video',
+      '生成视频',
+      '制作视频',
+      '视频',
+      '生成动画',
+      '制作动画',
+      '帮我做',
+      '帮我生成',
+      '创建视频',
+      '开始生成',
+      'create video',
     ];
     return videoKeywords.any((keyword) => lowerMessage.contains(keyword));
   }
@@ -263,132 +279,146 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
         child: Column(
-            children: [
-              // AppBar
-              _buildModernAppBar(context),
+          children: [
+            // AppBar
+            _buildModernAppBar(context),
 
-              // 错误消息横幅
-              Consumer<ChatProvider>(
-                builder: (context, provider, child) {
-                  if (provider.errorMessage != null) {
-                    final isApiKeyError = provider.errorMessage!.contains('API Key');
-                    return Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      margin: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                      decoration: BoxDecoration(
-                        color: isApiKeyError ? const Color(0xFFFFF7ED) : const Color(0xFFFEE2E2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isApiKeyError ? const Color(0xFFFED7AA) : const Color(0xFFFECACA),
-                          width: 1,
+            // 错误消息横幅
+            Consumer<ChatProvider>(
+              builder: (context, provider, child) {
+                if (provider.errorMessage != null) {
+                  final isApiKeyError =
+                      provider.errorMessage!.contains('API Key');
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    margin: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                    decoration: BoxDecoration(
+                      color: isApiKeyError
+                          ? const Color(0xFFFFF7ED)
+                          : const Color(0xFFFEE2E2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isApiKeyError
+                            ? const Color(0xFFFED7AA)
+                            : const Color(0xFFFECACA),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: isApiKeyError
+                                ? const Color(0xFFF59E0B)
+                                : const Color(0xFFEF4444),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            isApiKeyError
+                                ? Icons.settings_outlined
+                                : Icons.error_outline,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: isApiKeyError ? const Color(0xFFF59E0B) : const Color(0xFFEF4444),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              isApiKeyError ? Icons.settings_outlined : Icons.error_outline,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  isApiKeyError ? '需要配置 API Key' : '出错了',
-                                  style: const TextStyle(
-                                    color: Color(0xFF991B1B),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isApiKeyError ? '需要配置 API Key' : '出错了',
+                                style: const TextStyle(
+                                  color: Color(0xFF991B1B),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  provider.errorMessage!,
-                                  style: const TextStyle(
-                                    color: Color(0xFF991B1B),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (isApiKeyError)
-                            TextButton(
-                              onPressed: () {
-                                provider.clearError();
-                                Navigator.pushNamed(context, '/settings');
-                              },
-                              style: TextButton.styleFrom(
-                                foregroundColor: const Color(0xFF92400E),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
-                              child: const Text('去设置', style: TextStyle(fontSize: 13)),
-                            )
-                          else
-                            IconButton(
-                              icon: const Icon(Icons.close, size: 20),
-                              onPressed: () => provider.clearError(),
-                              color: const Color(0xFF991B1B),
-                              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                              const SizedBox(height: 2),
+                              Text(
+                                provider.errorMessage!,
+                                style: const TextStyle(
+                                  color: Color(0xFF991B1B),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (isApiKeyError)
+                          TextButton(
+                            onPressed: () {
+                              provider.clearError();
+                              Navigator.pushNamed(context, '/settings');
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: const Color(0xFF92400E),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                        ],
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
+                            child: const Text('去设置',
+                                style: TextStyle(fontSize: 13)),
+                          )
+                        else
+                          IconButton(
+                            icon: const Icon(Icons.close, size: 20),
+                            onPressed: () => provider.clearError(),
+                            color: const Color(0xFF991B1B),
+                            constraints: const BoxConstraints(
+                                minWidth: 40, minHeight: 40),
+                          ),
+                      ],
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
 
-              // 消息列表
-              Expanded(
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: (scrollNotification) {
-                    if (scrollNotification is ScrollStartNotification) {
-                      _isUserScrolling = true;
-                    } else if (scrollNotification is ScrollEndNotification) {
-                      _isUserScrolling = false;
-                    }
-                    return false;
+            // 消息列表
+            Expanded(
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (scrollNotification) {
+                  if (scrollNotification is ScrollStartNotification) {
+                    _isUserScrolling = true;
+                  } else if (scrollNotification is ScrollEndNotification) {
+                    _isUserScrolling = false;
+                  }
+                  return false;
+                },
+                child: Consumer<ChatProvider>(
+                  builder: (context, provider, child) {
+                    _scrollOnNewMessage(provider.messages.length);
+                    return ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      itemCount: provider.messages.length,
+                      itemBuilder: (context, index) {
+                        final message = provider.messages[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: _MessageBubble(
+                            message: message,
+                            onMergeVideos: (screenplay) =>
+                                _showMergeDialog(context, screenplay),
+                          ),
+                        );
+                      },
+                    );
                   },
-                  child: Consumer<ChatProvider>(
-                    builder: (context, provider, child) {
-                      _scrollOnNewMessage(provider.messages.length);
-                      return ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        itemCount: provider.messages.length,
-                        itemBuilder: (context, index) {
-                          final message = provider.messages[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: _MessageBubble(
-                              message: message,
-                              onMergeVideos: (screenplay) => _showMergeDialog(context, screenplay),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
                 ),
               ),
+            ),
 
-              // 进度追踪器 + 输入框
-              _buildProgressTracker(context),
-              _buildInputArea(context),
-            ],
-          ),
+            // 进度追踪器 + 输入框
+            _buildProgressTracker(context),
+            _buildInputArea(context),
+          ],
+        ),
       ),
     );
   }
@@ -408,17 +438,17 @@ class _ChatScreenState extends State<ChatScreen> {
       child: AppBar(
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Color(0xFF1C1C1E)),
+            icon: const Icon(Icons.menu, color: Color(0xFF0F172A)),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
         title: Consumer<ConversationProvider>(
           builder: (context, provider, child) {
-            final title = provider.currentConversation?.title ?? 'AI漫导';
+            final title = provider.currentConversation?.title ?? 'VigoAI';
             return Text(
               title,
               style: const TextStyle(
-                color: Color(0xFF1C1C1E),
+                color: Color(0xFF0F172A),
                 fontSize: 19,
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.5,
@@ -431,27 +461,26 @@ class _ChatScreenState extends State<ChatScreen> {
         scrolledUnderElevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.settings_outlined, size: 22),
-          onPressed: () => _showSettingsDialog(context),
-          color: const Color(0xFF8B5CF6),
-        ),
-        IconButton(
-          icon: const Icon(Icons.bug_report_outlined, size: 22),
-          onPressed: () => Navigator.pushNamed(context, '/logs'),
-          color: const Color(0xFF8B5CF6),
-        ),
-        IconButton(
-          icon: const Icon(Icons.delete_outline, size: 22),
-          onPressed: () => _showClearDialog(context),
-          color: const Color(0xFF8B5CF6),
-        ),
-      ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, size: 22),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
+            color: const Color(0xFF0EA5E9),
+          ),
+          IconButton(
+            icon: const Icon(Icons.bug_report_outlined, size: 22),
+            onPressed: () => Navigator.pushNamed(context, '/logs'),
+            color: const Color(0xFF0EA5E9),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, size: 22),
+            onPressed: () => _showClearDialog(context),
+            color: const Color(0xFF0EA5E9),
+          ),
+        ],
       ),
     );
   }
-
 
   Widget _buildInputArea(BuildContext context) {
     return Container(
@@ -475,163 +504,171 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-            // 图片预览区域
-            Consumer<ChatProvider>(
-              builder: (context, provider, child) {
-                if (provider.userImages.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  height: 64,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: provider.userImages.length + (provider.canAddMoreImages ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      // 添加图片按钮
-                      if (index == provider.userImages.length) {
-                        return _buildAddImageButton(context);
-                      }
-                      // 已选择的图片
-                      final userImage = provider.userImages[index];
-                      return Container(
-                        width: 64,
-                        height: 64,
-                        margin: const EdgeInsets.only(right: 8),
-                        child: Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.memory(
-                                base64Decode(userImage.base64),
-                                width: 64,
-                                height: 64,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    width: 64,
-                                    height: 64,
-                                    color: const Color(0xFFF3F4F6),
-                                    child: const Icon(Icons.broken_image, size: 24, color: Color(0xFF8E8E93)),
-                                  );
-                                },
-                              ),
+          // 图片预览区域
+          Consumer<ChatProvider>(
+            builder: (context, provider, child) {
+              if (provider.userImages.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                height: 64,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: provider.userImages.length +
+                      (provider.canAddMoreImages ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    // 添加图片按钮
+                    if (index == provider.userImages.length) {
+                      return _buildAddImageButton(context);
+                    }
+                    // 已选择的图片
+                    final userImage = provider.userImages[index];
+                    return Container(
+                      width: 64,
+                      height: 64,
+                      margin: const EdgeInsets.only(right: 8),
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.memory(
+                              base64Decode(userImage.base64),
+                              width: 64,
+                              height: 64,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 64,
+                                  height: 64,
+                                  color: const Color(0xFFF3F4F6),
+                                  child: const Icon(Icons.broken_image,
+                                      size: 24, color: Color(0xFF8E8E93)),
+                                );
+                              },
                             ),
-                            // 删除按钮
-                            Positioned(
-                              top: -4,
-                              right: -4,
-                              child: GestureDetector(
-                                onTap: () => provider.removeImage(index),
-                                child: Container(
-                                  width: 20,
-                                  height: 20,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF1C1C1E),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.close,
-                                    color: Colors.white,
-                                    size: 12,
-                                  ),
+                          ),
+                          // 删除按钮
+                          Positioned(
+                            top: -4,
+                            right: -4,
+                            child: GestureDetector(
+                              onTap: () => provider.removeImage(index),
+                              child: Container(
+                                width: 20,
+                                height: 20,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF0F172A),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 12,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-            // 输入行
-            Consumer<ChatProvider>(
-              builder: (context, provider, child) {
-                return Row(
-                  children: [
-                    // 图片选择按钮
-                    if (!provider.isProcessing)
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          children: [
-                            // 相册按钮
-                            if (provider.userImages.isEmpty)
-                              IconButton(
-                                onPressed: provider.pickImageFromGallery,
-                                icon: const Icon(Icons.photo_library_outlined, size: 20),
-                                tooltip: '从相册选择',
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                                color: const Color(0xFF6B7280),
-                              ),
-                            // 分隔线
-                            if (provider.userImages.isEmpty && provider.canAddMoreImages)
-                              Container(
-                                width: 0.5,
-                                height: 20,
-                                color: const Color(0xFFE5E7EB),
-                              ),
-                            // 拍照按钮
-                            if (provider.userImages.isEmpty)
-                              IconButton(
-                                onPressed: provider.pickImageFromCamera,
-                                icon: const Icon(Icons.camera_alt_outlined, size: 20),
-                                tooltip: '拍照',
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                                color: const Color(0xFF6B7280),
-                              ),
-                            // 添加更多图片按钮
-                            if (provider.userImages.isNotEmpty && provider.canAddMoreImages)
-                              _buildAddImageButtonSmall(context, provider),
-                          ],
-                        ),
-                      ),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: TextField(
-                          controller: _messageController,
-                          focusNode: _focusNode,
-                          autofocus: false,
-                          decoration: InputDecoration(
-                            hintText: provider.userImages.isNotEmpty
-                                ? '已选择 ${provider.userImages.length}/3 张参考图片'
-                                : '描述你的视频创意...',
-                            filled: false,
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            hintStyle: const TextStyle(
-                              color: Color(0xFF9CA3AF),
-                              fontSize: 15,
-                            ),
                           ),
-                          maxLines: null,
-                          textInputAction: TextInputAction.newline,
-                          onSubmitted: (_) => _sendMessage(),
-                        ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+          // 输入行
+          Consumer<ChatProvider>(
+            builder: (context, provider, child) {
+              return Row(
+                children: [
+                  // 图片选择按钮
+                  if (!provider.isProcessing)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          // 相册按钮
+                          if (provider.userImages.isEmpty)
+                            IconButton(
+                              onPressed: provider.pickImageFromGallery,
+                              icon: const Icon(Icons.photo_library_outlined,
+                                  size: 20),
+                              tooltip: '从相册选择',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                  minWidth: 40, minHeight: 40),
+                              color: const Color(0xFF6B7280),
+                            ),
+                          // 分隔线
+                          if (provider.userImages.isEmpty &&
+                              provider.canAddMoreImages)
+                            Container(
+                              width: 0.5,
+                              height: 20,
+                              color: const Color(0xFFE5E7EB),
+                            ),
+                          // 拍照按钮
+                          if (provider.userImages.isEmpty)
+                            IconButton(
+                              onPressed: provider.pickImageFromCamera,
+                              icon: const Icon(Icons.camera_alt_outlined,
+                                  size: 20),
+                              tooltip: '拍照',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                  minWidth: 40, minHeight: 40),
+                              color: const Color(0xFF6B7280),
+                            ),
+                          // 添加更多图片按钮
+                          if (provider.userImages.isNotEmpty &&
+                              provider.canAddMoreImages)
+                            _buildAddImageButtonSmall(context, provider),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    _buildSendButton(context, provider),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: TextField(
+                        controller: _messageController,
+                        focusNode: _focusNode,
+                        autofocus: false,
+                        decoration: InputDecoration(
+                          hintText: provider.userImages.isNotEmpty
+                              ? '已选择 ${provider.userImages.length}/3 张参考图片'
+                              : '描述你的视频创意...',
+                          filled: false,
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          hintStyle: const TextStyle(
+                            color: Color(0xFF9CA3AF),
+                            fontSize: 15,
+                          ),
+                        ),
+                        maxLines: null,
+                        textInputAction: TextInputAction.newline,
+                        onSubmitted: (_) => _sendMessage(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildSendButton(context, provider),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -646,11 +683,13 @@ class _ChatScreenState extends State<ChatScreen> {
         width: 50,
         height: 50,
         decoration: BoxDecoration(
-          color: isProcessing && !isCancelling ? const Color(0xFF9CA3AF) : const Color(0xFF8B5CF6),
+          color: isProcessing && !isCancelling
+              ? const Color(0xFF9CA3AF)
+              : const Color(0xFF0EA5E9),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF8B5CF6).withOpacity(0.25),
+              color: const Color(0xFF0EA5E9).withOpacity(0.25),
               offset: const Offset(0, 2),
               blurRadius: 8,
             ),
@@ -680,7 +719,8 @@ class _ChatScreenState extends State<ChatScreen> {
       builder: (context, provider, child) {
         // 只在有进度状态(视频生成中)或有失败场景时显示
         final hasProgress = provider.progressStatus.isNotEmpty;
-        final hasFailed = provider.screenplayController.currentScreenplay?.hasFailed ?? false;
+        final hasFailed =
+            provider.screenplayController.currentScreenplay?.hasFailed ?? false;
 
         if (!hasProgress && !hasFailed) {
           return const SizedBox.shrink();
@@ -695,7 +735,11 @@ class _ChatScreenState extends State<ChatScreen> {
           decoration: BoxDecoration(
             color: hasFailed ? const Color(0xFFFEE2E2) : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: hasFailed ? const Color(0xFFFECACA) : const Color(0xFFE5E7EB), width: 1),
+            border: Border.all(
+                color: hasFailed
+                    ? const Color(0xFFFECACA)
+                    : const Color(0xFFE5E7EB),
+                width: 1),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.04),
@@ -716,7 +760,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF8B5CF6),
+                        Color(0xFF0EA5E9),
                       ),
                     ),
                   ),
@@ -725,7 +769,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: hasFailed ? const Color(0xFFEF4444) : const Color(0xFF8B5CF6),
+                    color: hasFailed
+                        ? const Color(0xFFEF4444)
+                        : const Color(0xFF0EA5E9),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -746,7 +792,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF1C1C1E),
+                        color: Color(0xFF0F172A),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -763,7 +809,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           value: progress.clamp(0.0, 1.0),
                           backgroundColor: Colors.transparent,
                           valueColor: const AlwaysStoppedAnimation<Color>(
-                            Color(0xFF8B5CF6),
+                            Color(0xFF0EA5E9),
                           ),
                           minHeight: 6,
                         ),
@@ -775,9 +821,10 @@ class _ChatScreenState extends State<ChatScreen> {
               const SizedBox(width: 12),
               // 百分比 - 现代风格标签
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6),
+                  color: const Color(0xFF0EA5E9),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -793,89 +840,6 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         );
       },
-    );
-  }
-
-  void _showSettingsDialog(BuildContext context) {
-    final tokenController = TextEditingController();
-    tokenController.text = 'YOUR_TOKEN_PLACEHOLDER';
-    bool obscureText = true;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text(
-            '设置',
-            style: TextStyle(
-              color: Color(0xFFFFB8D1),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('API 令牌：'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: tokenController,
-                decoration: InputDecoration(
-                  hintText: '输入你的 API 令牌',
-                  filled: true,
-                  fillColor: const Color(0xFFFFEFF4),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color(0xFFFFB8D1), width: 2),
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      obscureText ? Icons.visibility_off : Icons.visibility,
-                      color: const Color(0xFFFFB8D1),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        obscureText = !obscureText;
-                      });
-                    },
-                  ),
-                ),
-                obscureText: obscureText,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                '输入你的 API Bearer 令牌。',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('取消'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('令牌当前硬编码在代码中，暂不支持UI修改')),
-                );
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFFFB8D1),
-              ),
-              child: const Text('确定'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -901,7 +865,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           FilledButton(
             onPressed: () {
-              context.read<ChatProvider>().clearConversation();
+              context.read<ChatProvider>().resetConversationState();
               Navigator.pop(context);
             },
             style: FilledButton.styleFrom(
@@ -917,7 +881,8 @@ class _ChatScreenState extends State<ChatScreen> {
   /// 显示视频合并对话框
   void _showMergeDialog(BuildContext context, Screenplay screenplay) {
     // 检查是否有足够的场景视频
-    final scenesWithVideo = screenplay.scenes.where((s) => s.videoUrl != null).length;
+    final scenesWithVideo =
+        screenplay.scenes.where((s) => s.videoUrl != null).length;
 
     showDialog(
       context: context,
@@ -930,7 +895,7 @@ class _ChatScreenState extends State<ChatScreen> {
               height: 36,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
+                  colors: [Color(0xFF06B6D4), Color(0xFF0EA5E9)],
                 ),
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -972,13 +937,14 @@ class _ChatScreenState extends State<ChatScreen> {
               showDialog(
                 context: context,
                 barrierDismissible: false,
-                builder: (context) => _MergeProgressDialog(screenplay: screenplay),
+                builder: (context) =>
+                    _MergeProgressDialog(screenplay: screenplay),
               );
               // 开始合并
               context.read<VideoMergeProvider>().mergeVideos(screenplay);
             },
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFEC4899),
+              backgroundColor: const Color(0xFF06B6D4),
             ),
             child: const Text('开始合并'),
           ),
@@ -1016,7 +982,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   /// 小型添加图片按钮（用于输入框旁）
-  Widget _buildAddImageButtonSmall(BuildContext context, ChatProvider provider) {
+  Widget _buildAddImageButtonSmall(
+      BuildContext context, ChatProvider provider) {
     return PopupMenuButton<String>(
       icon: const Icon(Icons.add_photo_alternate, color: Color(0xFF6B4CE6)),
       tooltip: '添加图片',
@@ -1128,12 +1095,12 @@ class _MessageBubble extends StatelessWidget {
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
+                      colors: [Color(0xFF0EA5E9), Color(0xFF3B82F6)],
                     ),
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF8B5CF6).withOpacity(0.2),
+                        color: const Color(0xFF0EA5E9).withOpacity(0.2),
                         offset: const Offset(0, 2),
                         blurRadius: 8,
                       ),
@@ -1147,11 +1114,9 @@ class _MessageBubble extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
               ],
-
               Flexible(
                 child: _buildMessageBubble(context, isUser, message),
               ),
-
               if (isUser) ...[
                 const SizedBox(width: 8),
                 // 用户头像 - 现代风格
@@ -1159,11 +1124,11 @@ class _MessageBubble extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6),
+                    color: const Color(0xFF0EA5E9),
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF8B5CF6).withOpacity(0.25),
+                        color: const Color(0xFF0EA5E9).withOpacity(0.25),
                         offset: const Offset(0, 2),
                         blurRadius: 6,
                       ),
@@ -1195,7 +1160,8 @@ class _MessageBubble extends StatelessWidget {
   }
 
   /// 现代消息气泡 - AI消息带渐变边框，用户消息带渐变背景
-  Widget _buildMessageBubble(BuildContext context, bool isUser, ChatMessage message) {
+  Widget _buildMessageBubble(
+      BuildContext context, bool isUser, ChatMessage message) {
     Color textColor;
     BorderRadiusGeometry borderRadius = BorderRadius.circular(20);
 
@@ -1204,7 +1170,7 @@ class _MessageBubble extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8F7FC),
+          color: const Color(0xFFF0F9FF),
           borderRadius: borderRadius,
           border: Border.all(
             color: const Color(0xFFE5E1F5),
@@ -1220,7 +1186,7 @@ class _MessageBubble extends StatelessWidget {
               child: CircularProgressIndicator(
                 strokeWidth: 2,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  const Color(0xFF8B5CF6).withOpacity(0.6),
+                  const Color(0xFF0EA5E9).withOpacity(0.6),
                 ),
               ),
             ),
@@ -1264,12 +1230,12 @@ class _MessageBubble extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+            colors: [Color(0xFF0EA5E9), Color(0xFF7C3AED)],
           ),
           borderRadius: borderRadius,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF8B5CF6).withOpacity(0.3),
+              color: const Color(0xFF0EA5E9).withOpacity(0.3),
               offset: const Offset(0, 4),
               blurRadius: 12,
             ),
@@ -1279,7 +1245,7 @@ class _MessageBubble extends StatelessWidget {
       );
     } else {
       // AI消息 - 玻璃态 + 渐变边框
-      textColor = const Color(0xFF1C1C1E);
+      textColor = const Color(0xFF0F172A);
       borderRadius = const BorderRadius.only(
         topLeft: Radius.circular(20),
         topRight: Radius.circular(20),
@@ -1293,11 +1259,11 @@ class _MessageBubble extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF8B5CF6), Color(0xFFEC4899), Color(0xFF8B5CF6)],
+            colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4), Color(0xFF0EA5E9)],
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF8B5CF6).withOpacity(0.15),
+              color: const Color(0xFF0EA5E9).withOpacity(0.15),
               offset: const Offset(0, 4),
               blurRadius: 16,
             ),
@@ -1316,7 +1282,8 @@ class _MessageBubble extends StatelessWidget {
     }
   }
 
-  Widget _buildMessageContent(BuildContext context, ChatMessage message, bool isUser, Color textColor) {
+  Widget _buildMessageContent(
+      BuildContext context, ChatMessage message, bool isUser, Color textColor) {
     switch (message.type) {
       case MessageType.text:
       case MessageType.thinking:
@@ -1411,8 +1378,7 @@ class _MessageBubble extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            if (message.mediaUrl != null)
-              _VideoPlayer(url: message.mediaUrl!),
+            if (message.mediaUrl != null) _VideoPlayer(url: message.mediaUrl!),
           ],
         );
 
@@ -1435,12 +1401,12 @@ class _MessageBubble extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: const Color(0xFFEC4899).withOpacity(0.3),
+                  color: const Color(0xFF06B6D4).withOpacity(0.3),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFEC4899).withOpacity(0.15),
+                    color: const Color(0xFF06B6D4).withOpacity(0.15),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -1456,18 +1422,19 @@ class _MessageBubble extends StatelessWidget {
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
+                            colors: [Color(0xFF06B6D4), Color(0xFF0EA5E9)],
                           ),
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFEC4899).withOpacity(0.4),
+                              color: const Color(0xFF06B6D4).withOpacity(0.4),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.auto_stories, color: Colors.white, size: 18),
+                        child: const Icon(Icons.auto_stories,
+                            color: Colors.white, size: 18),
                       ),
                       const SizedBox(width: 10),
                       const Text(
@@ -1480,7 +1447,8 @@ class _MessageBubble extends StatelessWidget {
                       ),
                       const Spacer(),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.7),
                           borderRadius: BorderRadius.circular(12),
@@ -1491,13 +1459,14 @@ class _MessageBubble extends StatelessWidget {
                             Text(
                               '点击编辑',
                               style: TextStyle(
-                                color: const Color(0xFFEC4899),
+                                color: const Color(0xFF06B6D4),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(width: 4),
-                            const Icon(Icons.arrow_forward_ios, color: Color(0xFFEC4899), size: 12),
+                            const Icon(Icons.arrow_forward_ios,
+                                color: Color(0xFF06B6D4), size: 12),
                           ],
                         ),
                       ),
@@ -1518,7 +1487,8 @@ class _MessageBubble extends StatelessWidget {
                   // 信息标签
                   Row(
                     children: [
-                      _buildInfoTag(Icons.view_carousel, '${message.draft!.sceneCount}个场景'),
+                      _buildInfoTag(Icons.view_carousel,
+                          '${message.draft!.sceneCount}个场景'),
                       const SizedBox(width: 8),
                       _buildInfoTag(Icons.category, message.draft!.genre),
                     ],
@@ -1528,7 +1498,10 @@ class _MessageBubble extends StatelessWidget {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: message.draft!.emotionalArc.asMap().entries.map((entry) {
+                    children: message.draft!.emotionalArc
+                        .asMap()
+                        .entries
+                        .map((entry) {
                       final index = entry.key;
                       final emotion = entry.value;
                       // 不同索引使用不同的渐变色
@@ -1566,21 +1539,25 @@ class _MessageBubble extends StatelessWidget {
             screenplay: message.screenplay!,
             videoProgress: videoProgress,
             onRetryScene: (sceneId) {
-              final provider = Provider.of<ChatProvider>(context, listen: false);
+              final provider =
+                  Provider.of<ChatProvider>(context, listen: false);
               provider.retryScene(sceneId);
             },
             onEditPrompt: (sceneId, customPrompt) {
-              final provider = Provider.of<ChatProvider>(context, listen: false);
+              final provider =
+                  Provider.of<ChatProvider>(context, listen: false);
               provider.retryScene(sceneId, customVideoPrompt: customPrompt);
             },
             // 🆕 手动触发单个场景生成
             onStartGeneration: (sceneId) {
-              final provider = Provider.of<ChatProvider>(context, listen: false);
+              final provider =
+                  Provider.of<ChatProvider>(context, listen: false);
               provider.startSceneGeneration(sceneId);
             },
             // 🆕 手动触发所有待处理场景生成
             onStartAllGeneration: () {
-              final provider = Provider.of<ChatProvider>(context, listen: false);
+              final provider =
+                  Provider.of<ChatProvider>(context, listen: false);
               provider.startAllPendingScenesGeneration();
             },
             // 🆕 合并场景视频
@@ -1602,30 +1579,30 @@ class _MessageBubble extends StatelessWidget {
   /// 清理HTML标签，将<details>/<summary>等转换为可读格式
   String _cleanHtmlTags(String content) {
     String cleaned = content;
-    
+
     // 处理 <details><summary>思考过程</summary>...</details> 格式
     // 提取summary标题和内容
     final detailsRegex = RegExp(
       r'<details>\s*<summary>(.*?)</summary>([\s\S]*?)</details>',
       multiLine: true,
     );
-    
+
     cleaned = cleaned.replaceAllMapped(detailsRegex, (match) {
       final title = match.group(1)?.trim() ?? '详情';
       final body = match.group(2)?.trim() ?? '';
       // 转换为markdown折叠格式（使用引用块样式）
       return '\n> **$title**\n>\n> ${body.replaceAll('\n', '\n> ')}\n';
     });
-    
+
     // 清理其他HTML标签
     cleaned = cleaned.replaceAll(RegExp(r'<details>'), '');
     cleaned = cleaned.replaceAll(RegExp(r'</details>'), '');
     cleaned = cleaned.replaceAll(RegExp(r'<summary>'), '**');
     cleaned = cleaned.replaceAll(RegExp(r'</summary>'), '**\n');
-    
+
     // 清理可能残留的其他HTML标签
     cleaned = cleaned.replaceAll(RegExp(r'<[^>]*>'), '');
-    
+
     return cleaned.trim();
   }
 
@@ -1636,12 +1613,12 @@ class _MessageBubble extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.8),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFEC4899).withOpacity(0.2)),
+        border: Border.all(color: const Color(0xFF06B6D4).withOpacity(0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: const Color(0xFFEC4899)),
+          Icon(icon, size: 12, color: const Color(0xFF06B6D4)),
           const SizedBox(width: 4),
           Text(
             label,
@@ -1659,8 +1636,8 @@ class _MessageBubble extends StatelessWidget {
   /// 获取情绪标签的渐变颜色
   List<Color> _getEmotionGradient(int index) {
     final gradients = [
-      [const Color(0xFFEC4899), const Color(0xFFF472B6)], // 粉色
-      [const Color(0xFF8B5CF6), const Color(0xFFA78BFA)], // 紫色
+      [const Color(0xFF06B6D4), const Color(0xFFF472B6)], // 粉色
+      [const Color(0xFF0EA5E9), const Color(0xFF3B82F6)], // 紫色
       [const Color(0xFF06B6D4), const Color(0xFF22D3EE)], // 青色
       [const Color(0xFFF59E0B), const Color(0xFFFBBF24)], // 橙色
       [const Color(0xFF10B981), const Color(0xFF34D399)], // 绿色
@@ -1744,8 +1721,8 @@ class _ImageViewerDialogState extends State<_ImageViewerDialog> {
         throw Exception('无法访问外部存储');
       }
 
-      // 创建 AI漫导 子目录
-      final appDir = Directory('${downloadDir.path}/AI漫导');
+      // 创建 VigoAI 子目录
+      final appDir = Directory('${downloadDir.path}/VigoAI');
       if (!await appDir.exists()) {
         await appDir.create(recursive: true);
       }
@@ -1791,7 +1768,7 @@ class _ImageViewerDialogState extends State<_ImageViewerDialog> {
         setState(() => _downloadProgress = null);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('图片已保存到:\n存储/AI漫导/\n$filename'),
+            content: Text('图片已保存到:\n存储/VigoAI/\n$filename'),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 5),
             action: SnackBarAction(
@@ -1869,7 +1846,8 @@ class _ImageViewerDialogState extends State<_ImageViewerDialog> {
                           children: [
                             Icon(Icons.error, color: Colors.red, size: 48),
                             SizedBox(height: 16),
-                            Text('图片加载失败', style: TextStyle(color: Colors.white)),
+                            Text('图片加载失败',
+                                style: TextStyle(color: Colors.white)),
                           ],
                         ),
                       );
@@ -1946,7 +1924,8 @@ class _ImageViewerDialogState extends State<_ImageViewerDialog> {
                               )
                             : IconButton(
                                 onPressed: _downloadImage,
-                                icon: const Icon(Icons.download, color: Colors.white),
+                                icon: const Icon(Icons.download,
+                                    color: Colors.white),
                               ),
                       ),
 
@@ -1979,7 +1958,8 @@ class _VideoPlayer extends StatefulWidget {
   final String url;
   final VoidCallback? onVideoEnded;
 
-  const _VideoPlayer({Key? key, required this.url, this.onVideoEnded}) : super(key: key);
+  const _VideoPlayer({Key? key, required this.url, this.onVideoEnded})
+      : super(key: key);
 
   @override
   State<_VideoPlayer> createState() => _VideoPlayerState();
@@ -1994,7 +1974,7 @@ class _VideoPlayerState extends State<_VideoPlayer> {
   bool _isDownloading = false;
   bool _isVisible = false;
   bool _hasAttemptedInit = false;
-  bool _hasEndedCallbackFired = false;  // 新增：防止回调重复触发
+  bool _hasEndedCallbackFired = false; // 新增：防止回调重复触发
 
   @override
   void initState() {
@@ -2049,7 +2029,9 @@ class _VideoPlayerState extends State<_VideoPlayer> {
       if (widget.url.startsWith('/') || widget.url.startsWith('file://')) {
         // 本地文件路径，直接使用
         print('🎬 检测到本地文件路径');
-        videoFile = File(widget.url.startsWith('file://') ? widget.url.replaceFirst('file://', '') : widget.url);
+        videoFile = File(widget.url.startsWith('file://')
+            ? widget.url.replaceFirst('file://', '')
+            : widget.url);
       } else {
         // 网络 URL，使用缓存管理器
         print('🎬 检测到网络 URL');
@@ -2239,42 +2221,43 @@ class _VideoPlayerState extends State<_VideoPlayer> {
               child: _buildPlayerContent(),
             ),
           ),
-        
-        // 视频链接和复制按钮
-        Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '视频链接: ${widget.url}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade600,
+
+          // 视频链接和复制按钮
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '视频链接: ${widget.url}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              IconButton(
-                onPressed: _copyUrl,
-                icon: const Icon(Icons.copy, size: 16),
-                style: IconButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  minimumSize: const Size(36, 32),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  foregroundColor: const Color(0xFF8B5CF6),
+                IconButton(
+                  onPressed: _copyUrl,
+                  icon: const Icon(Icons.copy, size: 16),
+                  style: IconButton.styleFrom(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: const Size(36, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    foregroundColor: const Color(0xFF0EA5E9),
+                  ),
+                  tooltip: '复制视频链接',
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 32,
+                  ),
                 ),
-                tooltip: '复制视频链接',
-                constraints: const BoxConstraints(
-                  minWidth: 36,
-                  minHeight: 32,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
       ),
     );
   }
@@ -2341,7 +2324,7 @@ class _VideoPlayerState extends State<_VideoPlayer> {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6).withOpacity(0.9),
+                    color: const Color(0xFF0EA5E9).withOpacity(0.9),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -2412,10 +2395,12 @@ class _PopArtBackgroundPainter extends CustomPainter {
     _drawDotPattern(canvas, Offset(0, 0), 150, 150, dotPaint);
     _drawDotPattern(canvas, Offset(size.width - 150, 0), 150, 150, dotPaint);
     _drawDotPattern(canvas, Offset(0, size.height - 150), 150, 150, dotPaint);
-    _drawDotPattern(canvas, Offset(size.width - 150, size.height - 150), 150, 150, dotPaint);
+    _drawDotPattern(canvas, Offset(size.width - 150, size.height - 150), 150,
+        150, dotPaint);
   }
 
-  void _drawDotPattern(Canvas canvas, Offset offset, double width, double height, Paint paint) {
+  void _drawDotPattern(
+      Canvas canvas, Offset offset, double width, double height, Paint paint) {
     const dotSpacing = 12.0;
     const dotRadius = 2.0;
 
@@ -2461,7 +2446,8 @@ class _EmotionChip extends StatefulWidget {
   State<_EmotionChip> createState() => _EmotionChipState();
 }
 
-class _EmotionChipState extends State<_EmotionChip> with SingleTickerProviderStateMixin {
+class _EmotionChipState extends State<_EmotionChip>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   bool _isPressed = false;
@@ -2515,7 +2501,8 @@ class _EmotionChipState extends State<_EmotionChip> with SingleTickerProviderSta
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.gradientColors.first.withOpacity(_isPressed ? 0.5 : 0.3),
+                    color: widget.gradientColors.first
+                        .withOpacity(_isPressed ? 0.5 : 0.3),
                     blurRadius: _isPressed ? 12 : 8,
                     offset: Offset(0, _isPressed ? 4 : 2),
                   ),
@@ -2555,14 +2542,16 @@ class _MergeProgressDialog extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
+                colors: [Color(0xFF06B6D4), Color(0xFF0EA5E9)],
               ),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.video_library_outlined, color: Colors.white, size: 20),
+            child: const Icon(Icons.video_library_outlined,
+                color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
-          const Text('合并视频', style: TextStyle(color: Colors.white, fontSize: 18)),
+          const Text('合并视频',
+              style: TextStyle(color: Colors.white, fontSize: 18)),
         ],
       ),
       content: SizedBox(
@@ -2582,12 +2571,14 @@ class _MergeProgressDialog extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.movie_creation_outlined, color: Color(0xFFEC4899), size: 18),
+                      const Icon(Icons.movie_creation_outlined,
+                          color: Color(0xFF06B6D4), size: 18),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           screenplay.scriptTitle,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.w600),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -2612,7 +2603,7 @@ class _MergeProgressDialog extends StatelessWidget {
                         value: mergeProvider.progress,
                         backgroundColor: Colors.transparent,
                         valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFFEC4899),
+                          Color(0xFF06B6D4),
                         ),
                       ),
                     ),
@@ -2627,7 +2618,8 @@ class _MergeProgressDialog extends StatelessWidget {
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              Color(0xFF0EA5E9)),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -2640,7 +2632,7 @@ class _MergeProgressDialog extends StatelessWidget {
                       Text(
                         '${(mergeProvider.progress * 100).toStringAsFixed(0)}%',
                         style: const TextStyle(
-                          color: Color(0xFFEC4899),
+                          color: Color(0xFF06B6D4),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -2661,8 +2653,13 @@ class _MergeProgressDialog extends StatelessWidget {
                         const Icon(Icons.check_circle, color: Colors.white),
                         const SizedBox(width: 12),
                         Text(
-                          mergeProvider.mergedVideoFile != null ? '视频合并完成！' : '已下载 ${mergeProvider.totalScenes} 个场景视频！',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                          mergeProvider.mergedVideoFile != null
+                              ? '视频合并完成！'
+                              : '已下载 ${mergeProvider.totalScenes} 个场景视频！',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16),
                         ),
                       ],
                     ),
@@ -2678,7 +2675,8 @@ class _MergeProgressDialog extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.video_library, color: Color(0xFF8B5CF6)),
+                          const Icon(Icons.video_library,
+                              color: Color(0xFF0EA5E9)),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -2686,12 +2684,18 @@ class _MergeProgressDialog extends StatelessWidget {
                               children: [
                                 const Text(
                                   '合并后的视频已就绪',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  mergeProvider.mergedVideoFile!.path.split('/').last,
-                                  style: const TextStyle(color: Color(0xFFB8B8D1), fontSize: 12),
+                                  mergeProvider.mergedVideoFile!.path
+                                      .split('/')
+                                      .last,
+                                  style: const TextStyle(
+                                      color: Color(0xFFB8B8D1), fontSize: 12),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -2716,11 +2720,14 @@ class _MergeProgressDialog extends StatelessWidget {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.list, color: Color(0xFF8B5CF6), size: 18),
+                              const Icon(Icons.list,
+                                  color: Color(0xFF0EA5E9), size: 18),
                               const SizedBox(width: 8),
                               Text(
                                 '场景列表 (${mergeProvider.totalScenes})',
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
@@ -2734,22 +2741,32 @@ class _MergeProgressDialog extends StatelessWidget {
                                       height: 24,
                                       decoration: BoxDecoration(
                                         gradient: const LinearGradient(
-                                          colors: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
+                                          colors: [
+                                            Color(0xFF06B6D4),
+                                            Color(0xFF0EA5E9)
+                                          ],
                                         ),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Center(
                                         child: Text(
                                           '${scene.sceneIndex}',
-                                          style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold),
                                         ),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        scene.narration.isEmpty ? '场景 ${scene.sceneIndex}' : scene.narration,
-                                        style: TextStyle(color: Color(0xFFB8B8D1), fontSize: 12),
+                                        scene.narration.isEmpty
+                                            ? '场景 ${scene.sceneIndex}'
+                                            : scene.narration,
+                                        style: TextStyle(
+                                            color: Color(0xFFB8B8D1),
+                                            fontSize: 12),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -2772,7 +2789,8 @@ class _MergeProgressDialog extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline, color: Color(0xFFEF4444)),
+                        const Icon(Icons.error_outline,
+                            color: Color(0xFFEF4444)),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -2798,7 +2816,8 @@ class _MergeProgressDialog extends StatelessWidget {
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: const Text('后台运行', style: TextStyle(color: Color(0xFFB8B8D1))),
+                child: const Text('后台运行',
+                    style: TextStyle(color: Color(0xFFB8B8D1))),
               );
             } else if (mergeProvider.status == MergeStatus.completed) {
               // 合并完成 - 多个操作按钮
@@ -2814,19 +2833,21 @@ class _MergeProgressDialog extends StatelessWidget {
                         FilledButton.icon(
                           onPressed: () {
                             Navigator.pop(context);
-                            _showMergedVideoPlayer(context, mergeProvider.mergedVideoFile!.path);
+                            _showMergedVideoPlayer(
+                                context, mergeProvider.mergedVideoFile!.path);
                           },
                           icon: const Icon(Icons.play_arrow, size: 18),
                           label: const Text('播放视频'),
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF8B5CF6),
+                            backgroundColor: const Color(0xFF0EA5E9),
                             foregroundColor: Colors.white,
                           ),
                         ),
                       const SizedBox(width: 8),
                       FilledButton.icon(
                         onPressed: () async {
-                          await _saveMergedVideoToGallery(context, mergeProvider.mergedVideoFile!.path);
+                          await _saveMergedVideoToGallery(
+                              context, mergeProvider.mergedVideoFile!.path);
                         },
                         icon: const Icon(Icons.save_alt, size: 18),
                         label: const Text('保存到相册'),
@@ -2863,15 +2884,18 @@ class _MergeProgressDialog extends StatelessWidget {
                       Navigator.pop(context);
                       context.read<VideoMergeProvider>().reset();
                     },
-                    child: const Text('关闭', style: TextStyle(color: Color(0xFFB8B8D1))),
+                    child: const Text('关闭',
+                        style: TextStyle(color: Color(0xFFB8B8D1))),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
                     onPressed: () {
-                      context.read<VideoMergeProvider>().mergeVideos(screenplay);
+                      context
+                          .read<VideoMergeProvider>()
+                          .mergeVideos(screenplay);
                     },
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFEC4899),
+                      backgroundColor: const Color(0xFF06B6D4),
                       foregroundColor: Colors.white,
                     ),
                     child: const Text('重试'),
@@ -2885,7 +2909,8 @@ class _MergeProgressDialog extends StatelessWidget {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text('关闭', style: TextStyle(color: Color(0xFFB8B8D1))),
+              child:
+                  const Text('关闭', style: TextStyle(color: Color(0xFFB8B8D1))),
             );
           },
         ),
@@ -2931,7 +2956,8 @@ class _MergeProgressDialog extends StatelessWidget {
   }
 
   /// 保存合并后的视频到相册
-  Future<void> _saveMergedVideoToGallery(BuildContext context, String videoPath) async {
+  Future<void> _saveMergedVideoToGallery(
+      BuildContext context, String videoPath) async {
     try {
       // 显示保存中提示
       if (context.mounted) {

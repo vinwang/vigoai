@@ -53,6 +53,7 @@ class ScreenplayDraftController extends ChangeNotifier {
   Future<ScreenplayDraft> generateDraft(
     String userPrompt, {
     List<UserImage>? userImages,
+    List<Map<String, String>>? history,
   }) async {
     if (_isGenerating) {
       throw StateError('剧本正在生成中');
@@ -82,6 +83,7 @@ class ScreenplayDraftController extends ChangeNotifier {
       final screenplayJson = await _apiService.generateDramaScreenplay(
         userPrompt,
         characterAnalysis: characterAnalysis,
+        history: history,
       );
 
       if (_isCancelling) {
@@ -305,7 +307,8 @@ class ScreenplayDraftController extends ChangeNotifier {
       return [];
     }
 
-    AppLogger.info('ScreenplayDraftController', '检测到 ${characters.length} 个角色，开始生成三视图...');
+    AppLogger.info(
+        'ScreenplayDraftController', '检测到 ${characters.length} 个角色，开始生成三视图...');
 
     onProgress?.call(0.0, '准备生成角色设定...');
 
@@ -319,7 +322,8 @@ class ScreenplayDraftController extends ChangeNotifier {
     _currentDraft = draft.withCharacterSheets(sheets);
     notifyListeners();
 
-    AppLogger.success('ScreenplayDraftController', '角色设定生成完成: ${sheets.length} 个角色');
+    AppLogger.success(
+        'ScreenplayDraftController', '角色设定生成完成: ${sheets.length} 个角色');
     return sheets;
   }
 
@@ -357,7 +361,8 @@ class ScreenplayDraftController extends ChangeNotifier {
       for (var s in sentences) {
         final trimmed = s.trim();
         if (trimmed.isNotEmpty && trimmed.length > 10) {
-          characterDescriptions.add(trimmed.endsWith('.') ? trimmed : '$trimmed.');
+          characterDescriptions
+              .add(trimmed.endsWith('.') ? trimmed : '$trimmed.');
         }
       }
     } else {
@@ -450,16 +455,14 @@ class ScreenplayDraftController extends ChangeNotifier {
         tags: [], // 可以后续从解析
         imagePrompt: sceneJson['image_prompt'] as String,
         videoPrompt: sceneJson['video_prompt'] as String,
-        characterDescription: sceneJson['character_description'] as String? ?? '',
+        characterDescription:
+            sceneJson['character_description'] as String? ?? '',
       );
     }).toList();
 
     // 解析情绪弧线
     final emotionalArc = json['emotional_arc'] as List<dynamic>?;
-    final arcList = emotionalArc
-        ?.map((e) => e.toString())
-        .toList() ??
-        [];
+    final arcList = emotionalArc?.map((e) => e.toString()).toList() ?? [];
 
     return ScreenplayDraft(
       id: 'draft_${DateTime.now().millisecondsSinceEpoch}',

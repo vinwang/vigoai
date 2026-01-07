@@ -16,15 +16,34 @@ typedef _SceneCountRange = SceneCountRange;
 
 /// API 配置
 class ApiConfig {
-  static const String zhipuBaseUrl = 'https://open.bigmodel.cn/api/paas/v4'; // 智谱 GLM
-  static const String tuziBaseUrl = 'https://api.ourzhishi.top'; // Tuzi API 基础URL (视频 & 图像)
-  static const String doubaoBaseUrl = 'https://ark.cn-beijing.volces.com/api/v3'; // 豆包 ARK API
+  static const String zhipuBaseUrl =
+      'https://open.bigmodel.cn/api/paas/v4'; // 智谱 GLM
+  static const String tuziBaseUrl =
+      'https://api.ourzhishi.top'; // Tuzi API 基础URL (视频 & 图像)
+  static const String doubaoBaseUrl =
+      'https://ark.cn-beijing.volces.com/api/v3'; // 豆包 ARK API
 
   // 各服务的 API Key（从 ApiConfigService 读取）
   static String get zhipuApiKey => ApiConfigService.getZhipuApiKey();
   static String get videoApiKey => ApiConfigService.getVideoApiKey();
   static String get imageApiKey => ApiConfigService.getImageApiKey();
   static String get doubaoApiKey => ApiConfigService.getDoubaoApiKey();
+
+  // ==================== 模型配置 ====================
+  // 文本模型 (GLM)
+  static const String textModel = 'glm-4-flash'; // 替代 'glm-4.7' 以降低成本
+
+  // 图片生成模型 (Tuzi/Gemini)
+  static const String imageModel = 'gemini-2.5-flash-image-vip';
+
+  // 视频生成模型 (Tuzi) veo3.1-components
+  static const String videoModel = 'sora-2';
+
+  // 角色一致性主要模型 (图生图)
+  static const String characterConsistencyModel = 'gpt-4o-image-vip';
+
+  // 提示词重写/优化模型
+  static const String promptRewriteModel = 'glm-4-flash';
 
   /// 创建智谱 API Dio 实例
   static Dio createDio() {
@@ -59,31 +78,33 @@ class ApiConfig {
 
   // 豆包模型配置
   // static const String doubaoImageModel = 'doubao-seed-1-8-251215'; // 支持图片的豆包模型
-  static const String doubaoImageModel = 'doubao-seed-1-8-preview-251115'; // 支持图片的豆包模型
+  static const String doubaoImageModel =
+      'doubao-seed-1-8-preview-251115'; // 支持图片的豆包模型
 
   // ==================== 功能开关 ====================
   /// 生产环境请将此值设为 false
   /// 注意：如果视频 Mock 为 false，Mock 图片 URL 必须是视频 API 可以访问的公开链接
-  static const bool USE_MOCK_VIDEO_API = false;  // 视频生成 Mock 开关
-  static const bool USE_MOCK_IMAGE_API = false;   // 图片生成 Mock 开关
-  static const bool USE_MOCK_CHARACTER_SHEET_API = false;   // 角色三视图生成 Mock 开关（测试用）
+  static const bool USE_MOCK_VIDEO_API = false; // 视频生成 Mock 开关
+  static const bool USE_MOCK_IMAGE_API = false; // 图片生成 Mock 开关
+  static const bool USE_MOCK_CHARACTER_SHEET_API =
+      false; // 角色三视图生成 Mock 开关（测试用）
 
   /// Thinking 模式开关
   /// 启用后会显示 AI 的思考过程，提升用户体验
   /// 演示时可开启，生产环境根据需求决定
-  static const bool USE_THINKING_MODE = true;  // 思考过程显示开关
+  static const bool USE_THINKING_MODE = true; // 思考过程显示开关
 
   // ==================== 场景配置 ====================
   /// 场景数量配置
   /// 控制大模型生成的场景数量，同时也是分镜图和分镜视频的数量
   /// 例如：设置为 2，则生成 2 个场景、2 张分镜图、2 个分镜视频
-  static int sceneCount = 7;  // 默认 2 个场景
+  static int sceneCount = 3; // 默认 2 个场景
 
   /// 并发生成场景数量配置
   /// 控制同时生成多少个场景的图片和视频
   /// 例如：设置为 3，则每 3 个场景为一组并行处理
   /// 设置为 1 表示串行处理，设置为大数值表示全并行处理
-  static int concurrentScenes = 2;  // 默认每批 3 个场景并行
+  static int concurrentScenes = 2; // 默认每批 3 个场景并行
 
   /// Mock 视频URL（用于测试）- 使用公开可访问的测试视频
   static const String MOCK_VIDEO_URL =
@@ -108,28 +129,6 @@ class ApiConfig {
   @Deprecated('使用 MOCK_CHARACTER_COMBINED_URL 替代')
   static const String MOCK_CHARACTER_SIDE_URL =
       'https://pro.filesystem.site/cdn/20251231/068472ac4cc0ac7a4a8bdb3dcfb693.jpeg';
-
-  static Dio createDio() {
-    final dio = Dio(BaseOptions(
-      baseUrl: zhipuBaseUrl,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 60),
-      headers: {
-        'Authorization': 'Bearer $zhipuApiKey',
-        'Content-Type': 'application/json',
-      },
-    ));
-
-    // 添加日志拦截器用于调试
-    dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-      requestHeader: true,
-      error: true,
-    ));
-
-    return dio;
-  }
 }
 
 /// GLM 系统提示词 - 剧本规划模式
@@ -198,39 +197,19 @@ GUIDELINES:
    - For human characters: specify "anime style, Asian features" or "Japanese anime style"
    - This description will be used to maintain consistency across all scenes
 
-EXAMPLE INPUT: "生成一只猫打架的视频"
+EXAMPLE INPUT: "生成两个机器人恋爱的视频"
 
 EXAMPLE OUTPUT:
 {
-  "task_id": "cat_fight_20231227",
-  "script_title": "猫咪大战",
+  "task_id": "robot_love_20231227",
+  "script_title": "机械之心",
   "scenes": [
     {
       "scene_id": 1,
-      "narration": "两只猫咪在草地上对峙，气氛紧张",
-      "image_prompt": "Two cats facing each other on grass, tense standoff. Left: orange tabby cat with bright green eyes and white paws. Right: grey striped cat with amber eyes. Cinematic composition, golden hour lighting, 4k ultra detailed",
-      "video_prompt": "Cats circling each other slowly, tails twitching, intense staring",
-      "character_description": "Orange tabby cat with bright green eyes, white paws, and striped tail. Grey striped cat with amber eyes and pointed ears.",
-      "image_url": null,
-      "video_url": null,
-      "status": "pending"
-    },
-    {
-      "scene_id": 2,
-      "narration": "突然，它们开始激烈地打斗",
-      "image_prompt": "The same orange tabby cat with green eyes and white paws fighting the grey striped cat with amber eyes. Mid-action shot, dynamic pose, motion blur, professional sports photography style, dramatic lighting",
-      "video_prompt": "Orange cat and grey cat jumping and pouncing, fast dynamic action, paws swiping",
-      "character_description": "Orange tabby cat with bright green eyes, white paws, and striped tail. Grey striped cat with amber eyes and pointed ears.",
-      "image_url": null,
-      "video_url": null,
-      "status": "pending"
-    },
-    {
-      "scene_id": 3,
-      "narration": "打斗结束，各自离开",
-      "image_prompt": "The orange tabby cat with green eyes and white paws walking left, away from camera. The grey striped cat with amber eyes walking right. Calm aftermath, sunset lighting, peaceful atmosphere, 4k detailed",
-      "video_prompt": "Orange cat and grey cat calmly walking away from each other in opposite directions, slow movement",
-      "character_description": "Orange tabby cat with bright green eyes, white paws, and striped tail. Grey striped cat with amber eyes and pointed ears.",
+      "narration": "在未来的废土世界，两个清理机器人在夕阳下相遇",
+      "image_prompt": "anime style, manga art, 2D animation. Two small rusty robots standing on a junk pile, facing each other. Sunset background, warm orange lighting, post-apocalyptic city ruins.",
+      "video_prompt": "Robots looking at each other, their mechanical eyes glowing softly, slow camera pan around them",
+      "character_description": "Small rusty robot with square head and glowing blue eyes.",
       "image_url": null,
       "video_url": null,
       "status": "pending"
@@ -255,7 +234,7 @@ ABSOLUTE RULES:
 
 /// GLM 系统提示词 - 普通聊天模式
 const String _glmChatPrompt = '''
-You are AI漫导 (DirectorAI), a friendly AI assistant specialized in video content creation.
+You are VigoAI (DirectorAI), a friendly AI assistant specialized in video content creation.
 
 你的职责：
 1. 友好地与用户交流
@@ -271,7 +250,7 @@ You are AI漫导 (DirectorAI), a friendly AI assistant specialized in video cont
 
 示例：
 用户：你好
-你：你好！我是 AI 漫导 🎬 我可以帮你创作各种视频内容，比如动画、短片、风景视频等。你想创作什么样的视频呢？
+你：你好！我是 VigoAI 🎬 我可以帮你创作各种视频内容，比如动画、短片、风景视频等。你想创作什么样的视频呢？
 
 用户：我想做个视频
 你：太好了！请告诉我更多细节吧，比如：
@@ -366,8 +345,8 @@ GUIDELINES:
    - Use dialogue-like quality for immersion
 
 5. MOOD LABELS:
-   Choose from: 温馨, 愉快, 惊喜, 浪漫, 期待, 感动, 治愈, 宁静, 活泼, 甜蜜
-   AVOID: 紧张, 悲伤, 愤怒, 绝望, 恐惧 - these may trigger content filters
+   Choose from: 温馨, 愉快, 惊喜, 浪漫, 期待, 感动, 治愈, 宁静, 活泼, 甜蜜，热血，慵懒，中二，幽默
+   AVOID: 紧张, 悲伤, 愤怒, 绝望, 恐惧，平静，冷漠 - these may trigger content filters
 
 6. EMOTIONAL_HOOK:
    - Brief phrase explaining the POSITIVE emotional moment
@@ -463,72 +442,30 @@ GUIDELINES:
    - CRITICAL: Always specify "anime style, Asian features" for human characters
    - Default to Japanese/Asian appearance unless user specifies otherwise
 
-EXAMPLE INPUT: "生成一个关于校园友谊的温馨视频"
+EXAMPLE INPUT: "生成一张关于战神归来的史诗视频"
 
-EXAMPLE OUTPUT:
+JSON FORMAT EXAMPLE (structure only, DO NOT copy content):
 {
-  "task_id": "school_friendship_20240127",
-  "title": "同桌的你",
-  "genre": "校园友情",
+  "task_id": "drama_[timestamp]_[theme_from_user_input]",
+  "title": "[Title based on user's request]",
+  "genre": "[Genre based on user's request]",
   "estimated_duration_seconds": 60,
-  "emotional_arc": ["宁静", "期待", "惊喜", "感动", "温馨"],
+  "emotional_arc": ["[emotion1]", "[emotion2]", "[emotion3]", ...],
   "scenes": [
     {
       "scene_id": 1,
-      "narration": "午后的教室，阳光洒在课桌上，女孩正在认真做笔记",
-      "mood": "宁静",
-      "emotional_hook": "校园午后的静谧时光",
-      "image_prompt": "anime style, manga art, 2D animation, cel shaded. A bright Japanese high school classroom with sunlight streaming through windows. A teenage Asian girl with short black hair and gentle eyes sitting at a desk, writing notes calmly. Warm golden hour lighting, peaceful atmosphere, clean anime art style",
-      "video_prompt": "Anime style 2D animation. Static camera with Medium shot showing girl at desk studying. Girl looks up, smiles at window, and says to herself '今天天气真好' with peaceful expression, female voice",
-      "character_description": "Anime style Asian girl, 16 years old, short black bob hair, dark gentle eyes, wearing Japanese high school uniform with white shirt and navy skirt"
-    },
-    {
-      "scene_id": 2,
-      "narration": "旁边的座位空着，那是她同桌的位置，已经三天没来了",
-      "mood": "期待",
-      "emotional_hook": "关心朋友：她还好吗？",
-      "image_prompt": "anime style, manga art, 2D animation, cel shaded. The same Asian girl glancing at the empty desk next to hers with a slightly worried expression. A bento box wrapped in cloth sits on her desk. Soft lighting, Japanese classroom setting, heartwarming anime art style",
-      "video_prompt": "Anime style 2D animation. Close-up static shot of girl's worried face glancing at empty desk. Girl whispers '不知道她怎么样了' with concerned expression, female voice",
-      "character_description": "Anime style Asian girl, 16 years old, short black bob hair, dark gentle eyes, wearing Japanese high school uniform"
-    },
-    {
-      "scene_id": 3,
-      "narration": "门口突然出现熟悉的身影，女孩惊喜地站起来",
-      "mood": "惊喜",
-      "emotional_hook": "朋友回来了！",
-      "image_prompt": "anime style, manga art, 2D animation, cel shaded. Another Asian girl with long ponytail standing at the classroom door, smiling warmly. The girl at the desk is looking up with happy surprise, starting to stand up. Bright anime art style, warm colors",
-      "video_prompt": "Anime style 2D animation. Quick pan right from girl's desk to doorway, revealing friend standing there. Girl's eyes light up, she stands up and calls out '你回来啦！' with excited smile, female voice",
-      "character_description": "Anime style Asian girl, 16 years old, short black bob hair, dark gentle eyes, wearing Japanese high school uniform. Another Asian girl, 16 years old, long black ponytail, warm smile, wearing matching school uniform"
-    },
-    {
-      "scene_id": 4,
-      "narration": "朋友走到她身边，轻轻递过一个小盒子：谢谢你这几天的笔记",
-      "mood": "感动",
-      "emotional_hook": "被记挂的温暖",
-      "image_prompt": "anime style, manga art, 2D animation, cel shaded. The ponytail girl handing a small wrapped gift to the bob-haired girl, who is smiling with touched emotion. The bento box on the desk is now revealed to be for the friend. Warm afternoon light, heartwarming composition, Japanese anime art style",
-      "video_prompt": "Anime style 2D animation. Two-shot static camera showing both girls at adjacent desks. Ponytail girl hands over gift and says '谢谢你帮我记笔记' with sincere smile, female voice. Bob-haired girl receives gift with touched expression",
-      "character_description": "Anime style Asian girl, 16 years old, short black bob hair, dark gentle eyes, wearing Japanese high school uniform. Another Asian girl, 16 years old, long black ponytail, warm smile, wearing matching school uniform"
-    },
-    {
-      "scene_id": 5,
-      "narration": "原来她生病了，但还记得把自己做的便当送来",
-      "mood": "温馨",
-      "emotional_hook": "双向奔赴的友情",
-      "image_prompt": "anime style, manga art, 2D animation, cel shaded. Both Asian girls sitting together at adjacent desks, sharing the bento box and laughing. Sunlight creates a warm glow around them. Happy friendship moment, Japanese anime art style, vibrant and cheerful colors",
-      "video_prompt": "Anime style 2D animation. Medium shot from side showing both girls eating together. Girl takes a bite, smiles and says '这个好吃！' with female voice. They laugh together. Warm, happy atmosphere",
-      "character_description": "Anime style Asian girl, 16 years old, short black bob hair, dark gentle eyes, wearing Japanese high school uniform. Another Asian girl, 16 years old, long black ponytail, warm smile, wearing matching school uniform"
-    },
-    {
-      "scene_id": 6,
-      "narration": "放学铃声响起，两人相视一笑，一起收拾书包走出教室",
-      "mood": "甜蜜",
-      "emotional_hook": "有朋友真好",
-      "image_prompt": "anime style, manga art, 2D animation, cel shaded. Both Asian girls walking side by side toward the classroom door, carrying their school bags. Orange sunset light streaming through windows creates a golden glow. School ending atmosphere, sweet friendship moment, Japanese anime art style",
-      "video_prompt": "Anime style 2D animation. Tracking shot following from behind as both girls walk toward door. They exchange looks, one says '明天见！' with female voice and other replies '明天见！' with female voice while waving. Camera shows their backs exiting into sunset",
-      "character_description": "Anime style Asian girl, 16 years old, short black bob hair, dark gentle eyes, wearing Japanese high school uniform. Another Asian girl, 16 years old, long black ponytail, warm smile, wearing matching school uniform"
+      "narration": "[Chinese narration for this scene]",
+      "mood": "[Mood label in Chinese]",
+      "emotional_hook": "[What emotional moment this scene creates]",
+      "image_prompt": "anime style, manga art, 2D animation, cel shaded. [Detailed English visual description]",
+      "video_prompt": "[Camera Type] [Camera Movement]. [Character action with Chinese dialogue], [voice gender]",
+      "character_description": "[Detailed character appearance for consistency]"
     }
   ]
 }
+
+CRITICAL: Generate content based on USER'S INPUT, NOT this example structure.
+
 
 ABSOLUTE RULES:
 1. CRITICAL: Output ONLY valid JSON - no markdown code blocks, no explanations
@@ -556,27 +493,27 @@ ABSOLUTE RULES:
 
 /// GLM 流式响应数据类型
 enum GLMStreamType {
-  thinking,  // 思考过程 (reasoning_content)
-  content,   // 最终内容 (content)
+  thinking, // 思考过程 (reasoning_content)
+  content, // 最终内容 (content)
 }
 
 /// GLM 流式响应块
 class GLMStreamChunk {
   final GLMStreamType type;
   final String text;
-  
+
   GLMStreamChunk({required this.type, required this.text});
-  
+
   bool get isThinking => type == GLMStreamType.thinking;
   bool get isContent => type == GLMStreamType.content;
 }
 
 /// 处理所有 API 调用的服务类
 class ApiService {
-  late Dio _dio;        // 智谱 GLM-4.7
-  late Dio _tuziDio;    // Tuzi Sora 视频生成
-  late Dio _imageDio;   // Gemini 图像生成
-  late Dio _doubaoDio;  // 豆包 ARK API (图片理解)
+  late Dio _dio; // 智谱 GLM-4.7
+  late Dio _tuziDio; // Tuzi Sora 视频生成
+  late Dio _imageDio; // Gemini 图像生成
+  late Dio _doubaoDio; // 豆包 ARK API (图片理解)
 
   ApiService() {
     _dio = ApiConfig.createDio();
@@ -705,7 +642,8 @@ class ApiService {
 
   /// 普通聊天方法 - 使用聊天模式的系统提示词
   /// 返回流式响应，包含思考过程和最终内容
-  Stream<GLMStreamChunk> chatWithGLM(List<Map<String, String>> conversationHistory) async* {
+  Stream<GLMStreamChunk> chatWithGLM(
+      List<Map<String, String>> conversationHistory) async* {
     yield* sendToGLMStream(conversationHistory, systemPrompt: _glmChatPrompt);
   }
 
@@ -756,7 +694,8 @@ class ApiService {
           ],
         };
 
-        AppLogger.apiRequestRaw('POST', '/chat/completions (豆包图片识别)', requestData);
+        AppLogger.apiRequestRaw(
+            'POST', '/chat/completions (豆包图片识别)', requestData);
         AppLogger.info('豆包-ARK', '使用豆包 API 进行图片识别');
 
         // 豆包 API 调用（非流式）
@@ -816,7 +755,8 @@ class ApiService {
         }
 
         final modeDesc = ApiConfig.USE_THINKING_MODE ? '流式+thinking' : '流式';
-        AppLogger.api('POST', '/chat/completions ($modeDesc)', {'model': 'glm-4.7'});
+        AppLogger.api(
+            'POST', '/chat/completions ($modeDesc)', {'model': 'glm-4.7'});
         AppLogger.info('GLM-Chat', '使用模型: glm-4.7 (纯文本)');
 
         // 使用 ResponseType.stream 实现真正的流式处理
@@ -856,12 +796,14 @@ class ApiService {
 
                 if (reasoningContent != null && reasoningContent.isNotEmpty) {
                   thinkingBuffer.write(reasoningContent);
-                  yield GLMStreamChunk(type: GLMStreamType.thinking, text: reasoningContent);
+                  yield GLMStreamChunk(
+                      type: GLMStreamType.thinking, text: reasoningContent);
                 }
 
                 if (content != null && content.isNotEmpty) {
                   contentBuffer.write(content);
-                  yield GLMStreamChunk(type: GLMStreamType.content, text: content);
+                  yield GLMStreamChunk(
+                      type: GLMStreamType.content, text: content);
                 }
               } catch (e) {
                 // 忽略解析错误
@@ -882,7 +824,8 @@ class ApiService {
 
   /// 发送对话历史到 GLM-4.7 并获取下一步操作（非流式）
   /// 系统提示词指示 GLM 作为状态机编排器工作
-  Future<String> sendToGLM(List<Map<String, String>> conversationHistory) async {
+  Future<String> sendToGLM(
+      List<Map<String, String>> conversationHistory) async {
     try {
       final messages = [
         {'role': 'system', 'content': _glmSystemPrompt},
@@ -890,7 +833,7 @@ class ApiService {
       ];
 
       final requestData = {
-        'model': 'glm-4.7',
+        'model': ApiConfig.textModel,
         'messages': messages,
         'stream': false,
         'max_tokens': 65536,
@@ -906,7 +849,8 @@ class ApiService {
 
       AppLogger.apiResponse('/chat/completions', response.data);
 
-      final content = response.data['choices']?[0]?['message']?['content'] as String?;
+      final content =
+          response.data['choices']?[0]?['message']?['content'] as String?;
       if (content == null) {
         AppLogger.error('GLM', '响应中没有内容', null, StackTrace.current);
         throw Exception('GLM 响应中没有内容');
@@ -941,7 +885,7 @@ class ApiService {
       ];
 
       final requestData = <String, dynamic>{
-        'model': 'glm-4.7',  // 使用文本模型生成剧本
+        'model': ApiConfig.textModel, // 使用配置的文本模型
         'messages': messages,
         'stream': true,
         'max_tokens': 65536,
@@ -956,7 +900,8 @@ class ApiService {
       }
 
       final modeDesc = ApiConfig.USE_THINKING_MODE ? '流式+thinking' : '流式';
-      AppLogger.apiRequestRaw('POST', '/chat/completions ($modeDesc)', requestData);
+      AppLogger.apiRequestRaw(
+          'POST', '/chat/completions ($modeDesc)', requestData);
 
       // 使用 ResponseType.stream 实现真正的流式处理
       final response = await _dio.post<ResponseBody>(
@@ -965,7 +910,8 @@ class ApiService {
         options: Options(responseType: ResponseType.stream),
       );
 
-      AppLogger.info('GLM', '开始接收流式响应 (thinking=${ApiConfig.USE_THINKING_MODE})');
+      AppLogger.info(
+          'GLM', '开始接收流式响应 (thinking=${ApiConfig.USE_THINKING_MODE})');
 
       final contentBuffer = StringBuffer();
       final thinkingBuffer = StringBuffer();
@@ -976,11 +922,11 @@ class ApiService {
       await for (final chunk in response.data!.stream) {
         // 将字节转换为字符串
         final chunkStr = utf8.decode(chunk, allowMalformed: true);
-        
+
         // 将不完整的行与新数据拼接
         final fullData = incompleteLine + chunkStr;
         final lines = fullData.split('\n');
-        
+
         // 最后一行可能不完整，保存到下次处理
         incompleteLine = lines.removeLast();
 
@@ -990,7 +936,8 @@ class ApiService {
           if (line.startsWith('data: ')) {
             final data = line.substring(6);
             if (data.trim() == '[DONE]') {
-              AppLogger.success('GLM', '流式响应完成，thinking长度: ${thinkingBuffer.length}, content长度: ${contentBuffer.length}, 接收到 $chunkCount 个有效chunk');
+              AppLogger.success('GLM',
+                  '流式响应完成，thinking长度: ${thinkingBuffer.length}, content长度: ${contentBuffer.length}, 接收到 $chunkCount 个有效chunk');
               return;
             }
             try {
@@ -1008,22 +955,26 @@ class ApiService {
               // 打印前几个 chunk 的完整 JSON 用于调试
               if (chunkCount <= 5) {
                 final jsonStr = jsonEncode(json);
-                AppLogger.info('GLM', 'Chunk #$chunkCount JSON: ${jsonStr.substring(0, jsonStr.length > 300 ? 300 : jsonStr.length)}...');
-                AppLogger.info('GLM', '  -> reasoning_content: "$reasoningContent", content: "$content"');
+                AppLogger.info('GLM',
+                    'Chunk #$chunkCount JSON: ${jsonStr.substring(0, jsonStr.length > 300 ? 300 : jsonStr.length)}...');
+                AppLogger.info('GLM',
+                    '  -> reasoning_content: "$reasoningContent", content: "$content"');
               }
 
               // 返回思考过程
               if (reasoningContent != null && reasoningContent.isNotEmpty) {
                 thinkingBuffer.write(reasoningContent);
                 AppLogger.streamChunk('GLM-Thinking', reasoningContent);
-                yield GLMStreamChunk(type: GLMStreamType.thinking, text: reasoningContent);
+                yield GLMStreamChunk(
+                    type: GLMStreamType.thinking, text: reasoningContent);
               }
 
               // 返回最终内容
               if (content != null && content.isNotEmpty) {
                 contentBuffer.write(content);
                 AppLogger.streamChunk('GLM-Content', content);
-                yield GLMStreamChunk(type: GLMStreamType.content, text: content);
+                yield GLMStreamChunk(
+                    type: GLMStreamType.content, text: content);
               }
             } catch (e) {
               AppLogger.warn('GLM', '解析流式数据失败: $line, 错误: $e');
@@ -1034,7 +985,8 @@ class ApiService {
       }
 
       // 处理最后可能残留的不完整行
-      if (incompleteLine.trim().isNotEmpty && incompleteLine.startsWith('data: ')) {
+      if (incompleteLine.trim().isNotEmpty &&
+          incompleteLine.startsWith('data: ')) {
         final data = incompleteLine.substring(6);
         if (data.trim() != '[DONE]') {
           try {
@@ -1045,11 +997,13 @@ class ApiService {
               final content = delta['content'] as String?;
               if (reasoningContent != null && reasoningContent.isNotEmpty) {
                 thinkingBuffer.write(reasoningContent);
-                yield GLMStreamChunk(type: GLMStreamType.thinking, text: reasoningContent);
+                yield GLMStreamChunk(
+                    type: GLMStreamType.thinking, text: reasoningContent);
               }
               if (content != null && content.isNotEmpty) {
                 contentBuffer.write(content);
-                yield GLMStreamChunk(type: GLMStreamType.content, text: content);
+                yield GLMStreamChunk(
+                    type: GLMStreamType.content, text: content);
               }
             }
           } catch (_) {
@@ -1075,6 +1029,7 @@ class ApiService {
     String userPrompt, {
     String? characterAnalysis,
     String? previousFeedback,
+    List<Map<String, String>>? history,
   }) async {
     const maxRetries = 3; // 最大重试次数
 
@@ -1131,12 +1086,18 @@ $previousFeedback
         AppLogger.info('漫剧剧本生成', '开始生成剧本草稿...');
 
         // 使用配置的场景数量构建提示词
-        final dynamicSystemPrompt = _buildDynamicDramaPromptWithCount(configuredSceneCount);
+        final dynamicSystemPrompt =
+            _buildDynamicDramaPromptWithCount(configuredSceneCount);
 
         final contentBuffer = StringBuffer();
 
+        final messages = [
+          if (history != null && history.isNotEmpty) ...history,
+          {'role': 'user', 'content': enhancedPrompt}
+        ];
+
         await for (final chunk in sendToGLMStream(
-          [{'role': 'user', 'content': enhancedPrompt}],
+          messages,
           systemPrompt: dynamicSystemPrompt,
         )) {
           if (chunk.isContent) {
@@ -1148,13 +1109,13 @@ $previousFeedback
 
         // 清理中文引号和其他可能导致 JSON 解析失败的字符
         responseJson = responseJson
-            .replaceAll('"', '"')      // 中文左双引号
-            .replaceAll('"', '"')      // 中文右双引号
+            .replaceAll('"', '"') // 中文左双引号
+            .replaceAll('"', '"') // 中文右双引号
             .replaceAll(''', '\'')     // 中文左单引号
-            .replaceAll(''', '\'')     // 中文右单引号
-            .replaceAll('：', ':')     // 中文冒号
-            .replaceAll(RegExp(r'```json\s*'), '')   // 移除 markdown json 代码块标记
-            .replaceAll(RegExp(r'```\s*'), '')       // 移除 markdown 代码块结束标记
+            .replaceAll(''', '\'') // 中文右单引号
+            .replaceAll('：', ':') // 中文冒号
+            .replaceAll(RegExp(r'```json\s*'), '') // 移除 markdown json 代码块标记
+            .replaceAll(RegExp(r'```\s*'), '') // 移除 markdown 代码块结束标记
             .trim();
 
         // 验证返回的是有效 JSON
@@ -1174,7 +1135,8 @@ $previousFeedback
           }
 
           // 验证场景数量（允许±1的误差）
-          if (scenes.length < configuredSceneCount - 1 || scenes.length > configuredSceneCount + 1) {
+          if (scenes.length < configuredSceneCount - 1 ||
+              scenes.length > configuredSceneCount + 1) {
             AppLogger.warn('漫剧剧本生成',
                 '场景数量与配置不符（期望$configuredSceneCount个，实际${scenes.length}个），但继续使用');
           }
@@ -1185,10 +1147,12 @@ $previousFeedback
           return responseJson;
         } on FormatException catch (e) {
           if (attempt == maxRetries) {
-            AppLogger.error('漫剧剧本生成', 'JSON 格式验证失败（已重试$maxRetries次）: $e\n响应内容: $responseJson');
+            AppLogger.error('漫剧剧本生成',
+                'JSON 格式验证失败（已重试$maxRetries次）: $e\n响应内容: $responseJson');
             rethrow;
           }
-          AppLogger.warn('漫剧剧本生成', 'JSON 格式验证失败，准备重试... ($attempt/$maxRetries)');
+          AppLogger.warn(
+              '漫剧剧本生成', 'JSON 格式验证失败，准备重试... ($attempt/$maxRetries)');
           // 继续下一次尝试
           continue;
         }
@@ -1206,6 +1170,7 @@ $previousFeedback
     // 理论上不会到达这里
     throw Exception('漫剧剧本生成失败：超过最大重试次数');
   }
+
   /// 根据配置的场景数量构建漫剧提示词
   String _buildDynamicDramaPromptWithCount(int sceneCount) {
     // 替换原有的固定场景数量
@@ -1296,7 +1261,8 @@ $previousFeedback
         ],
       };
 
-      AppLogger.apiRequestRaw('POST', '/chat/completions (豆包图片分析)', requestData);
+      AppLogger.apiRequestRaw(
+          'POST', '/chat/completions (豆包图片分析)', requestData);
       AppLogger.info('豆包-ARK', '开始分析图片特征...');
 
       final response = await _doubaoDio.post(
@@ -1309,7 +1275,8 @@ $previousFeedback
       // 解析豆包响应（OpenAI 格式）
       final choices = response.data['choices'] as List?;
       if (choices == null || choices.isEmpty) {
-        AppLogger.error('豆包-ARK', '响应格式错误：没有 choices', null, StackTrace.current);
+        AppLogger.error(
+            '豆包-ARK', '响应格式错误：没有 choices', null, StackTrace.current);
         throw Exception('图片分析失败：响应格式错误');
       }
 
@@ -1353,7 +1320,8 @@ $previousFeedback
       }
       // 模拟网络延迟
       await Future.delayed(const Duration(milliseconds: 500));
-      AppLogger.success('图片生成[MOCK]', '返回 Mock 图片: ${ApiConfig.MOCK_IMAGE_URL}');
+      AppLogger.success(
+          '图片生成[MOCK]', '返回 Mock 图片: ${ApiConfig.MOCK_IMAGE_URL}');
       return ApiConfig.MOCK_IMAGE_URL;
     }
 
@@ -1371,7 +1339,7 @@ $previousFeedback
   }) async {
     try {
       final requestData = {
-        'model': 'gemini-2.5-flash-image-vip',
+        'model': ApiConfig.imageModel,
         // 'model': 'gemini-3-pro-image-preview',
         'prompt': prompt,
         'n': 1,
@@ -1393,7 +1361,9 @@ $previousFeedback
       final response = await _imageDio.post(
         '/v1/images/generations',
         data: requestData,
-        options: Options(sendTimeout: const Duration(seconds: 500), receiveTimeout: const Duration(seconds: 500)),
+        options: Options(
+            sendTimeout: const Duration(seconds: 500),
+            receiveTimeout: const Duration(seconds: 500)),
       );
 
       AppLogger.apiResponseRaw('/v1/images/generations', response.data);
@@ -1439,7 +1409,8 @@ $previousFeedback
                 retryCount: retryCount + 1,
               );
             } else {
-              AppLogger.error('图片生成', '调整后仍无法通过安全检查，放弃重试', null, StackTrace.current);
+              AppLogger.error(
+                  '图片生成', '调整后仍无法通过安全检查，放弃重试', null, StackTrace.current);
             }
           }
         }
@@ -1454,13 +1425,27 @@ $previousFeedback
     // 移除或替换可能导致安全检查失败的敏感词汇
     final sanitized = prompt
         // 移除过于暴露的描述
-        .replaceAll(RegExp(r'\b(sexy|nude|naked|breast|underwear|lingerie|intimate|suggestive)\b', caseSensitive: false), 'beautiful')
+        .replaceAll(
+            RegExp(
+                r'\b(sexy|nude|naked|breast|underwear|lingerie|intimate|suggestive)\b',
+                caseSensitive: false),
+            'beautiful')
         // 移除暴力相关词汇
-        .replaceAll(RegExp(r'\b(violence|blood|kill|death|weapon|gore)\b', caseSensitive: false), 'dramatic')
+        .replaceAll(
+            RegExp(r'\b(violence|blood|kill|death|weapon|gore)\b',
+                caseSensitive: false),
+            'dramatic')
         // 移除其他可能的敏感词
-        .replaceAll(RegExp(r'\b(disturbing|shocking|offensive)\b', caseSensitive: false), 'artistic')
+        .replaceAll(
+            RegExp(r'\b(disturbing|shocking|offensive)\b',
+                caseSensitive: false),
+            'artistic')
         // 简化过于复杂的描述
-        .replaceAll(RegExp(r'\b(highly detailed|extreme|intense|realistic skin|anatomically correct)\b', caseSensitive: false), 'detailed')
+        .replaceAll(
+            RegExp(
+                r'\b(highly detailed|extreme|intense|realistic skin|anatomically correct)\b',
+                caseSensitive: false),
+            'detailed')
         // 保留核心内容，添加安全的艺术描述
         .trim();
 
@@ -1509,7 +1494,8 @@ $previousFeedback
     ];
 
     for (final pattern in violentPatterns) {
-      sanitized = sanitized.replaceAll(RegExp(pattern, caseSensitive: false), 'gentle');
+      sanitized =
+          sanitized.replaceAll(RegExp(pattern, caseSensitive: false), 'gentle');
     }
 
     // 替换为积极正向的词汇
@@ -1530,11 +1516,13 @@ $previousFeedback
     };
 
     for (final entry in replacements.entries) {
-      sanitized = sanitized.replaceAll(RegExp(entry.key, caseSensitive: false), entry.value);
+      sanitized = sanitized.replaceAll(
+          RegExp(entry.key, caseSensitive: false), entry.value);
     }
 
     // 添加安全的前缀和后缀
-    final result = 'Peaceful anime style scene. $sanitized. Calm and positive atmosphere.';
+    final result =
+        'Peaceful anime style scene. $sanitized. Calm and positive atmosphere.';
 
     AppLogger.info('视频提示词清理', '清理后提示词: $result');
 
@@ -1589,7 +1577,7 @@ gentle, soft, calm, peaceful, warm, bright, smooth, quiet, serene, beautiful, lo
       final response = await _dio.post(
         '/chat/completions',
         data: {
-          'model': 'glm-4-flash', // 使用快速模型
+          'model': ApiConfig.promptRewriteModel, // 使用快速模型
           'messages': [
             {'role': 'user', 'content': rewritePrompt}
           ],
@@ -1680,7 +1668,7 @@ gentle, soft, calm, peaceful, warm, bright, smooth, quiet, serene, beautiful, lo
       }
 
       final requestBody = {
-        'model': 'gpt-4o-image-vip',
+        'model': ApiConfig.characterConsistencyModel,
         'stream': false,
         'messages': [
           {
@@ -1690,7 +1678,8 @@ gentle, soft, calm, peaceful, warm, bright, smooth, quiet, serene, beautiful, lo
         ],
       };
 
-      AppLogger.apiRequestRaw('POST', '/v1/chat/completions (图生图)', requestBody);
+      AppLogger.apiRequestRaw(
+          'POST', '/v1/chat/completions (图生图)', requestBody);
       AppLogger.info('图生图(角色)', '发送请求...');
       final response = await dio.post(
         '/v1/chat/completions',
@@ -1721,7 +1710,9 @@ gentle, soft, calm, peaceful, warm, bright, smooth, quiet, serene, beautiful, lo
                 final parsed = content;
 
                 // 策略1: 优先匹配 markdown 图片格式 ![alt](url)
-                final markdownImageMatch = RegExp(r'!\[.*?\]\((https://pro\.filesystem\.site/cdn/[^\)]+)\)').firstMatch(parsed);
+                final markdownImageMatch = RegExp(
+                        r'!\[.*?\]\((https://pro\.filesystem\.site/cdn/[^\)]+)\)')
+                    .firstMatch(parsed);
                 if (markdownImageMatch != null) {
                   imageUrl = markdownImageMatch.group(1);
                   AppLogger.info('图生图(角色)', '从 Markdown 图片格式提取 URL: $imageUrl');
@@ -1729,7 +1720,9 @@ gentle, soft, calm, peaceful, warm, bright, smooth, quiet, serene, beautiful, lo
 
                 // 策略2: 如果没找到，匹配 pro.filesystem.site 的图片 URL
                 if (imageUrl == null) {
-                  final cdnUrlMatch = RegExp(r'https://pro\.filesystem\.site/cdn/[^\s\])"]+').firstMatch(parsed);
+                  final cdnUrlMatch =
+                      RegExp(r'https://pro\.filesystem\.site/cdn/[^\s\])"]+')
+                          .firstMatch(parsed);
                   if (cdnUrlMatch != null) {
                     imageUrl = cdnUrlMatch.group(0);
                     AppLogger.info('图生图(角色)', '从 CDN URL 提取: $imageUrl');
@@ -1738,7 +1731,10 @@ gentle, soft, calm, peaceful, warm, bright, smooth, quiet, serene, beautiful, lo
 
                 // 策略3: 兜底 - 提取所有 URL 并过滤预览页面
                 if (imageUrl == null) {
-                  final allUrls = RegExp(r'https?://[^\s\])"]+').allMatches(parsed).map((m) => m.group(0)!).toList();
+                  final allUrls = RegExp(r'https?://[^\s\])"]+')
+                      .allMatches(parsed)
+                      .map((m) => m.group(0)!)
+                      .toList();
                   AppLogger.info('图生图(角色)', '找到的所有 URL: $allUrls');
                   // 过滤掉 pro.asyncdata.net/web 预览链接
                   for (final url in allUrls) {
@@ -1749,7 +1745,8 @@ gentle, soft, calm, peaceful, warm, bright, smooth, quiet, serene, beautiful, lo
                   }
                 }
               } catch (e) {
-                AppLogger.error('图生图(角色)', '解析 URL 失败: $e', e, StackTrace.current);
+                AppLogger.error(
+                    '图生图(角色)', '解析 URL 失败: $e', e, StackTrace.current);
               }
             }
           } else if (content is List) {
@@ -1817,7 +1814,8 @@ gentle, soft, calm, peaceful, warm, bright, smooth, quiet, serene, beautiful, lo
 
       onProgress?.call(0.5, '生成组合三视图...');
       await Future.delayed(const Duration(milliseconds: 500));
-      AppLogger.success('角色三视图[MOCK]', '组合三视图生成完成: ${ApiConfig.MOCK_CHARACTER_COMBINED_URL}');
+      AppLogger.success(
+          '角色三视图[MOCK]', '组合三视图生成完成: ${ApiConfig.MOCK_CHARACTER_COMBINED_URL}');
 
       final sheetId = 'char_${DateTime.now().millisecondsSinceEpoch}';
       final characterId = 'char_${characterName.hashCode}';
@@ -1901,12 +1899,14 @@ Style: anime/manga art style, clean line art, flat colors, professional characte
 Quality: high quality, detailed, 4k, consistent proportions across all views
 Background: plain white or light gray background
 Composition: all three views same size, equal spacing, full body visible, neutral standing pose, T-pose or A-pose preferred
-'''.trim();
+'''
+        .trim();
   }
 
   /// 兼容旧版：构建单视图提示词
   @Deprecated('使用 _buildCombinedViewPrompt 替代')
-  String _buildCharacterViewPrompt(String description, CharacterViewType viewType) {
+  String _buildCharacterViewPrompt(
+      String description, CharacterViewType viewType) {
     // 基础描述
     final baseDesc = description.isNotEmpty
         ? description
@@ -1929,7 +1929,8 @@ Style: anime/manga art style, clean line art, flat colors, professional characte
 Quality: high quality, detailed, 4k
 Background: plain white or light gray background for character reference
 Composition: centered, full body visible, neutral standing pose
-'''.trim();
+'''
+        .trim();
   }
 
   /// 批量生成多个角色的三视图
@@ -2021,7 +2022,7 @@ Composition: centered, full body visible, neutral standing pose
     required String prompt,
     List<String> imageUrls = const [], // 多张参考图URL（直接传URL字符串）
     String seconds = '10',
-    String model = 'veo3.1-components',  // 默认使用 veo3.1-components 支持多图
+    String model = ApiConfig.videoModel, // 使用配置的默认模型
     String size = '1280x720',
     bool sanitizePrompt = false, // 是否清理提示词（重试时使用）
   }) async {
@@ -2053,7 +2054,8 @@ Composition: centered, full body visible, neutral standing pose
     // 生产模式：调用真实 Tuzi Sora API
     // ========================================
     try {
-      AppLogger.info('视频生成', '开始生成视频: $finalPrompt, 时长: ${seconds}秒, 模型: $model');
+      AppLogger.info(
+          '视频生成', '开始生成视频: $finalPrompt, 时长: ${seconds}秒, 模型: $model');
       AppLogger.info('视频生成', '参考图数量: ${imageUrls.length}');
       AppLogger.info('视频生成', '参考图URL: $imageUrls');
 
@@ -2094,7 +2096,8 @@ Composition: centered, full body visible, neutral standing pose
       if (result.isCompleted && result.hasVideoUrl) {
         AppLogger.success('视频生成', '视频生成成功: ${result.videoUrl}');
       } else if (result.isFailed) {
-        AppLogger.error('视频生成', '视频生成失败: ${result.error}', null, StackTrace.current);
+        AppLogger.error(
+            '视频生成', '视频生成失败: ${result.error}', null, StackTrace.current);
       } else {
         AppLogger.info('视频生成', '任务已提交: ${result.id}, 状态: ${result.status}');
       }
@@ -2175,7 +2178,8 @@ Composition: centered, full body visible, neutral standing pose
         final result = VideoGenerationResponse.fromJson(response.data);
 
         AppLogger.apiResponseRaw('/v1/videos/$taskId', response.data);
-        AppLogger.info('视频轮询', '状态: ${result.status}, 进度: ${result.progress ?? 0}%');
+        AppLogger.info(
+            '视频轮询', '状态: ${result.status}, 进度: ${result.progress ?? 0}%');
 
         // 回调进度更新
         onProgress?.call(result.progress ?? 0, result.status ?? 'unknown');

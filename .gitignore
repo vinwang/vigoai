@@ -1,0 +1,91 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+
+# IntelliJ / Android Studio
+*.iml
+.idea/
+*.ipr
+*.iws
+out/
+
+# VS Code
+.vscode/
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+*.code-workspace
+
+# Flutter/Dart/Pub
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+doc/api/
+
+# Android
+android/gradle/
+android/.gradle/
+android/app/libs/
+android/key.properties
+android/local.properties
+android/*.log
+android/captures/
+android/app/build/
+android/app/release/
+android/app/debug/
+android/app/profile/
+android/.project
+android/.settings
+android/.classpath
+android/build/
+
+# iOS
+ios/.generated/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/app.flx
+ios/Flutter/app.zip
+ios/Flutter/flutter_assets/
+ios/Podfile.lock
+ios/Pods/
+ios/derivedData/
+ios/.symlinks/
+
+# macOS
+macos/Flutter/ephemeral/
+macos/Pods/
+macos/Podfile.lock
+
+# Windows
+windows/flutter/ephemeral/
+
+# Linux
+linux/flutter/ephemeral/
+
+# Web
+web/build/
+lib/generated_plugin_registrant.dart
+
+# Generated files
+*.g.dart
+# (Note: usually we commit .g.dart files so others don't need to run build_runner, 
+# but if you want purely minimal source, un-comment the line above. 
+# For now I keep them commented out as standard Flutter apps usually commit them for easier checkout-and-run)
+# *.g.dart
+
+# Env
+.env

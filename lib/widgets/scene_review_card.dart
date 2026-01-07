@@ -147,7 +147,7 @@ class _SceneReviewCardState extends State<SceneReviewCard> {
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            color: const Color(0xFF8B5CF6),
+            color: const Color(0xFF0EA5E9),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Center(
@@ -170,7 +170,7 @@ class _SceneReviewCardState extends State<SceneReviewCard> {
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF1C1C1E),
+              color: Color(0xFF0F172A),
               letterSpacing: -0.5,
             ),
           ),
@@ -190,7 +190,7 @@ class _SceneReviewCardState extends State<SceneReviewCard> {
             icon: const Icon(Icons.refresh, size: 18),
             onPressed: widget.onRegenerate,
             tooltip: '重新生成此场景',
-            color: const Color(0xFF8B5CF6),
+            color: const Color(0xFF0EA5E9),
             padding: const EdgeInsets.all(4),
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
@@ -231,7 +231,7 @@ class _SceneReviewCardState extends State<SceneReviewCard> {
             const Text(
               '情绪钩子（可编辑）',
               style: TextStyle(
-                color: Color(0xFF1C1C1E),
+                color: Color(0xFF0F172A),
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
@@ -256,10 +256,11 @@ class _SceneReviewCardState extends State<SceneReviewCard> {
             contentPadding: EdgeInsets.all(12),
           ),
           style: const TextStyle(fontSize: 14),
-          controller: TextEditingController(text: widget.scene.emotionalHook ?? '')
-            ..selection = TextSelection.fromPosition(
-              TextPosition(offset: widget.scene.emotionalHook?.length ?? 0),
-            ),
+          controller:
+              TextEditingController(text: widget.scene.emotionalHook ?? '')
+                ..selection = TextSelection.fromPosition(
+                  TextPosition(offset: widget.scene.emotionalHook?.length ?? 0),
+                ),
           onChanged: widget.onEmotionalHookChanged,
         ),
       ],
@@ -273,12 +274,12 @@ class _SceneReviewCardState extends State<SceneReviewCard> {
       children: [
         Row(
           children: [
-            const Icon(Icons.person, size: 16, color: Color(0xFF8B5CF6)),
+            const Icon(Icons.person, size: 16, color: Color(0xFF0EA5E9)),
             const SizedBox(width: 6),
             const Text(
               '人物描述（可编辑）',
               style: TextStyle(
-                color: Color(0xFF1C1C1E),
+                color: Color(0xFF0F172A),
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
@@ -303,7 +304,8 @@ class _SceneReviewCardState extends State<SceneReviewCard> {
             contentPadding: EdgeInsets.all(12),
           ),
           style: const TextStyle(fontSize: 14),
-          controller: TextEditingController(text: widget.scene.characterDescription)
+          controller: TextEditingController(
+              text: widget.scene.characterDescription)
             ..selection = TextSelection.fromPosition(
               TextPosition(offset: widget.scene.characterDescription.length),
             ),
@@ -320,12 +322,12 @@ class _SceneReviewCardState extends State<SceneReviewCard> {
       children: [
         Row(
           children: [
-            const Icon(Icons.image, size: 16, color: Color(0xFF8B5CF6)),
+            const Icon(Icons.image, size: 16, color: Color(0xFF0EA5E9)),
             const SizedBox(width: 6),
             const Text(
               '图片生成提示词（可编辑）',
               style: TextStyle(
-                color: Color(0xFF1C1C1E),
+                color: Color(0xFF0F172A),
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
@@ -372,7 +374,7 @@ class _SceneReviewCardState extends State<SceneReviewCard> {
             const Text(
               '视频生成提示词（可编辑）',
               style: TextStyle(
-                color: Color(0xFF1C1C1E),
+                color: Color(0xFF0F172A),
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
@@ -414,12 +416,12 @@ class _SceneReviewCardState extends State<SceneReviewCard> {
       children: [
         Row(
           children: [
-            const Icon(Icons.edit_note, size: 18, color: Color(0xFF8B5CF6)),
+            const Icon(Icons.edit_note, size: 18, color: Color(0xFF0EA5E9)),
             const SizedBox(width: 6),
             const Text(
               '旁白（可编辑）',
               style: TextStyle(
-                color: Color(0xFF1C1C1E),
+                color: Color(0xFF0F172A),
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
               ),

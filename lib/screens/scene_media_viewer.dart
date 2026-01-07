@@ -27,7 +27,8 @@ class SceneMediaViewer extends StatefulWidget {
 
 enum MediaType { image, video }
 
-class _SceneMediaViewerState extends State<SceneMediaViewer> with WidgetsBindingObserver {
+class _SceneMediaViewerState extends State<SceneMediaViewer>
+    with WidgetsBindingObserver {
   late PageController _pageController;
   late int _currentIndex;
   VideoPlayerController? _videoController;
@@ -45,19 +46,20 @@ class _SceneMediaViewerState extends State<SceneMediaViewer> with WidgetsBinding
     _pageController = PageController(initialPage: widget.initialSceneIndex);
     // 监听应用生命周期
     WidgetsBinding.instance.addObserver(this);
-    
+
     // 🔑 关键：释放其他页面的视频播放器资源，确保录屏等功能有足够的硬件资源
     VideoPlayerManager().releaseAllResources();
     debugPrint('🎬 SceneMediaViewer 打开，已释放其他视频播放器资源');
   }
-  
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    
+
     // 当应用进入后台或不活跃时，暂停视频释放硬件资源
     // 这样录屏等操作可以获取到编解码器资源
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
       _wasPlayingBeforePause = _videoController?.value.isPlaying ?? false;
       _videoController?.pause();
       debugPrint('🎬 应用进入后台，暂停视频播放以释放硬件资源');
@@ -78,7 +80,7 @@ class _SceneMediaViewerState extends State<SceneMediaViewer> with WidgetsBinding
     _disposeVideoControllerSync();
     super.dispose();
   }
-  
+
   /// 同步释放（用于 dispose）
   void _disposeVideoControllerSync() {
     try {
@@ -102,7 +104,7 @@ class _SceneMediaViewerState extends State<SceneMediaViewer> with WidgetsBinding
   /// 异步释放（用于切换视频时等待硬件释放）
   Future<void> _disposeVideoController() async {
     _disposeVideoControllerSync();
-    
+
     // 等待硬件解码器释放 - 增加到 500ms 以确保资源完全释放
     // 这对于录屏等需要编解码器资源的功能很重要
     await Future.delayed(const Duration(milliseconds: 500));
@@ -114,27 +116,27 @@ class _SceneMediaViewerState extends State<SceneMediaViewer> with WidgetsBinding
       debugPrint('🎬 跳过初始化：已有视频正在初始化');
       return;
     }
-    
+
     // 如果是同一个视频且已初始化，跳过
     if (_currentVideoUrl == url && _isVideoInitialized) {
       debugPrint('🎬 跳过初始化：同一视频已初始化');
       return;
     }
-    
+
     _isInitializing = true;
-    
+
     try {
       // 先释放之前的播放器，并等待硬件解码器释放
       await _disposeVideoController();
-      
+
       // 再次检查是否还在当前页面（防止快速滑动导致的问题）
       if (!mounted) {
         _isInitializing = false;
         return;
       }
-      
+
       debugPrint('🎬 开始初始化视频: $url');
-      
+
       final cacheManager = VideoCacheManager();
       final isCached = await cacheManager.isCached(url);
 
@@ -157,7 +159,7 @@ class _SceneMediaViewerState extends State<SceneMediaViewer> with WidgetsBinding
 
       _videoController = VideoPlayerController.file(videoFile);
       await _videoController!.initialize();
-      
+
       _currentVideoUrl = url;
 
       if (mounted) {
@@ -168,13 +170,13 @@ class _SceneMediaViewerState extends State<SceneMediaViewer> with WidgetsBinding
           showControls: true,
           aspectRatio: _videoController!.value.aspectRatio,
           materialProgressColors: ChewieProgressColors(
-            playedColor: const Color(0xFF8B5CF6),
-            handleColor: const Color(0xFFEC4899),
+            playedColor: const Color(0xFF0EA5E9),
+            handleColor: const Color(0xFF06B6D4),
             backgroundColor: const Color(0xFFE5E7EB),
             bufferedColor: const Color(0xFFD1D5DB),
           ),
         );
-        
+
         setState(() => _isVideoInitialized = true);
         debugPrint('🎬 视频初始化成功: $url');
       }
@@ -292,7 +294,7 @@ class _SceneMediaViewerState extends State<SceneMediaViewer> with WidgetsBinding
   Widget _buildImageMedia(Scene scene) {
     // 检查图片状态
     if (scene.status == SceneStatus.imageGenerating) {
-      return _buildLoadingWidget('正在生成分镜图...', const Color(0xFF8B5CF6), scene);
+      return _buildLoadingWidget('正在生成分镜图...', const Color(0xFF0EA5E9), scene);
     }
 
     if (scene.imageUrl == null || scene.imageUrl!.isEmpty) {
@@ -312,7 +314,7 @@ class _SceneMediaViewerState extends State<SceneMediaViewer> with WidgetsBinding
             return Center(
               child: CircularProgressIndicator(
                 value: progress.progress,
-                color: const Color(0xFF8B5CF6),
+                color: const Color(0xFF0EA5E9),
               ),
             );
           },
@@ -326,22 +328,25 @@ class _SceneMediaViewerState extends State<SceneMediaViewer> with WidgetsBinding
 
   Widget _buildVideoMedia(Scene scene) {
     // 检查视频状态
-    if (scene.status == SceneStatus.videoGenerating || scene.status == SceneStatus.imageGenerating) {
-      return _buildLoadingWidget('正在生成分镜视频...', const Color(0xFFEC4899), scene);
+    if (scene.status == SceneStatus.videoGenerating ||
+        scene.status == SceneStatus.imageGenerating) {
+      return _buildLoadingWidget('正在生成分镜视频...', const Color(0xFF06B6D4), scene);
     }
 
     if (scene.videoUrl == null || scene.videoUrl!.isEmpty) {
       if (scene.status == SceneStatus.imageCompleted) {
-        return _buildLoadingWidget('等待生成视频...', const Color(0xFFEC4899), scene);
+        return _buildLoadingWidget('等待生成视频...', const Color(0xFF06B6D4), scene);
       }
       return _buildPlaceholderWidget('等待生成视频', scene);
     }
 
     // 检查是否是当前页面的视频
     final isCurrentPage = widget.scenes.indexOf(scene) == _currentIndex;
-    
+
     // 只有当前页面才初始化视频
-    if (!_isVideoInitialized || _chewieController == null || _currentVideoUrl != scene.videoUrl) {
+    if (!_isVideoInitialized ||
+        _chewieController == null ||
+        _currentVideoUrl != scene.videoUrl) {
       // 只在当前页面且未请求过初始化时触发
       if (isCurrentPage && !_hasRequestedInit && !_isInitializing) {
         _hasRequestedInit = true;
@@ -356,7 +361,7 @@ class _SceneMediaViewerState extends State<SceneMediaViewer> with WidgetsBinding
         });
       }
       return Center(
-        child: CircularProgressIndicator(color: const Color(0xFF8B5CF6)),
+        child: CircularProgressIndicator(color: const Color(0xFF0EA5E9)),
       );
     }
 
@@ -466,7 +471,7 @@ class _SceneMediaViewerState extends State<SceneMediaViewer> with WidgetsBinding
           height: 8,
           decoration: BoxDecoration(
             color: _currentIndex == index
-                ? const Color(0xFF8B5CF6)
+                ? const Color(0xFF0EA5E9)
                 : Colors.white.withOpacity(0.4),
             borderRadius: BorderRadius.circular(4),
           ),

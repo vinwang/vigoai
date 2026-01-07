@@ -41,7 +41,8 @@ class ApiConfigService {
   static Future<void> setZhipuApiKey(String key) async {
     _ensureInitialized();
     await _prefs!.setString(_keyZhipuApiKey, key);
-    AppLogger.info('ApiConfigService', '已更新智谱 API Key: ${key.substring(0, 8)}...');
+    AppLogger.info(
+        'ApiConfigService', '已更新智谱 API Key: ${key.substring(0, 8)}...');
   }
 
   /// 获取视频生成 API Key
@@ -54,7 +55,8 @@ class ApiConfigService {
   static Future<void> setVideoApiKey(String key) async {
     _ensureInitialized();
     await _prefs!.setString(_keyVideoApiKey, key);
-    AppLogger.info('ApiConfigService', '已更新视频 API Key: ${key.substring(0, 8)}...');
+    AppLogger.info(
+        'ApiConfigService', '已更新视频 API Key: ${key.substring(0, 8)}...');
   }
 
   /// 获取图像生成 API Key
@@ -67,7 +69,8 @@ class ApiConfigService {
   static Future<void> setImageApiKey(String key) async {
     _ensureInitialized();
     await _prefs!.setString(_keyImageApiKey, key);
-    AppLogger.info('ApiConfigService', '已更新图像 API Key: ${key.substring(0, 8)}...');
+    AppLogger.info(
+        'ApiConfigService', '已更新图像 API Key: ${key.substring(0, 8)}...');
   }
 
   /// 获取豆包 API Key
@@ -80,7 +83,8 @@ class ApiConfigService {
   static Future<void> setDoubaoApiKey(String key) async {
     _ensureInitialized();
     await _prefs!.setString(_keyDoubaoApiKey, key);
-    AppLogger.info('ApiConfigService', '已更新豆包 API Key: ${key.substring(0, 8)}...');
+    AppLogger.info(
+        'ApiConfigService', '已更新豆包 API Key: ${key.substring(0, 8)}...');
   }
 
   /// 检查智谱 API Key 是否已配置

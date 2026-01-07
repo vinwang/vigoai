@@ -3,6 +3,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 import '../models/conversation.dart';
 import '../models/conversation_message.dart';
+import '../models/media_item.dart';
 
 /// Hive 数据库服务
 class HiveService {
@@ -12,9 +13,11 @@ class HiveService {
 
   static const String _conversationsBoxName = 'conversations';
   static const String _messagesBoxName = 'messages';
+  static const String _mediaBoxName = 'media_gallery';
 
   late Box<Conversation> _conversationsBox;
   late Box<ConversationMessage> _messagesBox;
+  late Box<MediaItem> _mediaBox;
 
   bool _isInitialized = false;
 
@@ -37,10 +40,18 @@ class HiveService {
       if (!Hive.isAdapterRegistered(2)) {
         Hive.registerAdapter(ConversationMessageAdapter());
       }
+      if (!Hive.isAdapterRegistered(4)) {
+        Hive.registerAdapter(MediaTypeAdapter());
+      }
+      if (!Hive.isAdapterRegistered(5)) {
+        Hive.registerAdapter(MediaItemAdapter());
+      }
 
       // 打开 Box
-      _conversationsBox = await Hive.openBox<Conversation>(_conversationsBoxName);
+      _conversationsBox =
+          await Hive.openBox<Conversation>(_conversationsBoxName);
       _messagesBox = await Hive.openBox<ConversationMessage>(_messagesBoxName);
+      _mediaBox = await Hive.openBox<MediaItem>(_mediaBoxName);
 
       _isInitialized = true;
       debugPrint('✅ Hive 数据库初始化完成');
@@ -101,7 +112,8 @@ class HiveService {
     await _conversationsBox.delete(id);
 
     // 级联删除相关消息
-    final messages = _messagesBox.values.where((m) => m.conversationId == id).toList();
+    final messages =
+        _messagesBox.values.where((m) => m.conversationId == id).toList();
     for (final message in messages) {
       await _messagesBox.delete(message.id);
     }
@@ -155,8 +167,52 @@ class HiveService {
     await _ensureInitialized();
     await _messagesBox.put(message.id, message);
 
+    // 自动检测并保存媒体项
+    if (message.metadata != null && message.metadata!.containsKey('mediaUrl')) {
+      try {
+        final mediaUrl = message.metadata!['mediaUrl'] as String;
+        if (mediaUrl.isNotEmpty) {
+          MediaType? mediaType;
+          final lowerUrl = mediaUrl.toLowerCase();
+
+          if (lowerUrl.endsWith('.mp4') ||
+              lowerUrl.endsWith('.mov') ||
+              lowerUrl.endsWith('.avi')) {
+            mediaType = MediaType.video;
+          } else if (lowerUrl.endsWith('.png') ||
+              lowerUrl.endsWith('.jpg') ||
+              lowerUrl.endsWith('.jpeg') ||
+              lowerUrl.endsWith('.webp') ||
+              lowerUrl.endsWith('.gif')) {
+            mediaType = MediaType.image;
+          }
+
+          if (mediaType != null) {
+            final mediaItem = MediaItem(
+              id: message.id,
+              url: mediaUrl,
+              type: mediaType,
+              createdAt: message.createdAt,
+              conversationId: message.conversationId,
+              prompt: message.content,
+            );
+            await saveMediaItem(mediaItem);
+            debugPrint('🖼️ 自动保存媒体项: ${mediaItem.id}, 类型: ${mediaType}');
+          }
+        }
+      } catch (e) {
+        debugPrint('⚠️ 自动保存媒体项失败: $e');
+      }
+    }
+
     // 更新会话统计
     await updateConversationStats(message.conversationId, message.content);
+  }
+
+  /// 更新消息
+  Future<void> updateMessage(ConversationMessage message) async {
+    await _ensureInitialized();
+    await _messagesBox.put(message.id, message);
   }
 
   /// 获取会话的所有消息
@@ -195,6 +251,29 @@ class HiveService {
         .length;
   }
 
+  // ==================== 媒体库操作 ====================
+
+  /// 保存媒体项
+  Future<void> saveMediaItem(MediaItem item) async {
+    await _ensureInitialized();
+    await _mediaBox.put(item.id, item);
+  }
+
+  /// 获取所有媒体项
+  Future<List<MediaItem>> getAllMediaItems() async {
+    await _ensureInitialized();
+    final items = _mediaBox.values.toList();
+    // 按创建时间倒序排序
+    items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return items;
+  }
+
+  /// 删除媒体项
+  Future<void> deleteMediaItem(String id) async {
+    await _ensureInitialized();
+    await _mediaBox.delete(id);
+  }
+
   // ==================== 统计操作 ====================
 
   /// 获取总会话数量
@@ -211,7 +290,9 @@ class HiveService {
   Future<void> clearAll() async {
     await _ensureInitialized();
     await _conversationsBox.clear();
+    await _conversationsBox.clear();
     await _messagesBox.clear();
+    await _mediaBox.clear();
     debugPrint('🗑️ 已清空所有数据');
   }
 
@@ -219,6 +300,7 @@ class HiveService {
   Future<void> close() async {
     await _conversationsBox.close();
     await _messagesBox.close();
+    await _mediaBox.close();
     _isInitialized = false;
     debugPrint('🔒 Hive 数据库已关闭');
   }

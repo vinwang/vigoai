@@ -49,12 +49,12 @@ class ScreenplayCard extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF8B5CF6).withOpacity(0.3),
+          color: const Color(0xFF0EA5E9).withOpacity(0.3),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF8B5CF6).withOpacity(0.2),
+            color: const Color(0xFF0EA5E9).withOpacity(0.2),
             offset: const Offset(0, 8),
             blurRadius: 24,
           ),
@@ -95,7 +95,8 @@ class ScreenplayCard extends StatelessWidget {
                     const Spacer(),
                     // 🆕 如果有待处理的场景，显示"开始全部生成"按钮
                     if (onStartAllGeneration != null &&
-                        screenplay.scenes.any((s) => s.status == SceneStatus.pending))
+                        screenplay.scenes
+                            .any((s) => s.status == SceneStatus.pending))
                       Container(
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
@@ -116,11 +117,13 @@ class ScreenplayCard extends StatelessWidget {
                             onTap: onStartAllGeneration,
                             borderRadius: BorderRadius.circular(20),
                             child: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.play_circle_outline, size: 14, color: Colors.white),
+                                  Icon(Icons.play_circle_outline,
+                                      size: 14, color: Colors.white),
                                   SizedBox(width: 4),
                                   Text(
                                     '开始全部生成',
@@ -145,12 +148,12 @@ class ScreenplayCard extends StatelessWidget {
                         child: Container(
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
+                              colors: [Color(0xFF06B6D4), Color(0xFF0EA5E9)],
                             ),
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFEC4899).withOpacity(0.4),
+                                color: const Color(0xFF06B6D4).withOpacity(0.4),
                                 offset: const Offset(0, 2),
                                 blurRadius: 8,
                               ),
@@ -162,11 +165,13 @@ class ScreenplayCard extends StatelessWidget {
                               onTap: onMergeVideos,
                               borderRadius: BorderRadius.circular(20),
                               child: const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.video_library_outlined, size: 14, color: Colors.white),
+                                    Icon(Icons.video_library_outlined,
+                                        size: 14, color: Colors.white),
                                     SizedBox(width: 4),
                                     Text(
                                       '合并视频',
@@ -193,14 +198,18 @@ class ScreenplayCard extends StatelessWidget {
                     screenplay: screenplay,
                     sceneIndex: index,
                     scene: scene,
-                    onRetry: scene.status == SceneStatus.failed && onRetryScene != null
+                    onRetry: scene.status == SceneStatus.failed &&
+                            onRetryScene != null
                         ? () => onRetryScene!(scene.sceneId)
                         : null,
-                    onEditPrompt: scene.status == SceneStatus.failed && onEditPrompt != null
-                        ? () => _showEditPromptDialog(context, scene.sceneId, scene.videoPrompt, scene.narration)
+                    onEditPrompt: scene.status == SceneStatus.failed &&
+                            onEditPrompt != null
+                        ? () => _showEditPromptDialog(context, scene.sceneId,
+                            scene.videoPrompt, scene.narration)
                         : null,
                     // 🆕 手动触发单个场景生成
-                    onStartGeneration: scene.status == SceneStatus.pending && onStartGeneration != null
+                    onStartGeneration: scene.status == SceneStatus.pending &&
+                            onStartGeneration != null
                         ? () => onStartGeneration!(scene.sceneId)
                         : null,
                   );
@@ -228,18 +237,19 @@ class ScreenplayCard extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
               ),
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF8B5CF6).withOpacity(0.4),
+                  color: const Color(0xFF0EA5E9).withOpacity(0.4),
                   blurRadius: 12,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: const Icon(Icons.movie_creation, color: Colors.white, size: 18),
+            child:
+                const Icon(Icons.movie_creation, color: Colors.white, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -283,11 +293,13 @@ class ScreenplayCard extends StatelessWidget {
                     onTap: () => _showFullScriptDialog(context, screenplay),
                     borderRadius: BorderRadius.circular(8),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.description, size: 14, color: Colors.white.withOpacity(0.8)),
+                          Icon(Icons.description,
+                              size: 14, color: Colors.white.withOpacity(0.8)),
                           const SizedBox(width: 4),
                           Text(
                             '剧本',
@@ -325,8 +337,8 @@ class ScreenplayCard extends StatelessWidget {
       gradientColors = [const Color(0xFF10B981), const Color(0xFF059669)];
     } else {
       label = '进行中';
-      color = const Color(0xFF8B5CF6);
-      gradientColors = [const Color(0xFF8B5CF6), const Color(0xFFEC4899)];
+      color = const Color(0xFF0EA5E9);
+      gradientColors = [const Color(0xFF0EA5E9), const Color(0xFF06B6D4)];
     }
 
     return Container(
@@ -349,11 +361,16 @@ class ScreenplayCard extends StatelessWidget {
             SizedBox(
               width: 12,
               height: 12,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: Colors.white),
             ),
             const SizedBox(width: 6),
           ],
-          Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12)),
         ],
       ),
     );
@@ -373,17 +390,21 @@ class ScreenplayCard extends StatelessWidget {
           Expanded(
             child: Text(
               screenplay.statusDescription,
-              style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.7)),
+              style:
+                  TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.7)),
             ),
           ),
           // 进度百分比带渐变效果
           ShaderMask(
             shaderCallback: (bounds) => const LinearGradient(
-              colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+              colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
             ).createShader(bounds),
             child: Text(
               '${(progress * 100).round()}%',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
           ),
           const SizedBox(width: 12),
@@ -401,12 +422,12 @@ class ScreenplayCard extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                      colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
                     ),
                     borderRadius: BorderRadius.circular(3),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF8B5CF6).withOpacity(0.5),
+                        color: const Color(0xFF0EA5E9).withOpacity(0.5),
                         blurRadius: 6,
                       ),
                     ],
@@ -421,9 +442,11 @@ class ScreenplayCard extends StatelessWidget {
   }
 
   /// 显示编辑提示词对话框
-  void _showEditPromptDialog(BuildContext context, int sceneId, String currentPrompt, String narration) {
+  void _showEditPromptDialog(BuildContext context, int sceneId,
+      String currentPrompt, String narration) {
     final controller = TextEditingController(text: currentPrompt);
-    final sceneNum = screenplay.scenes.indexWhere((s) => s.sceneId == sceneId) + 1;
+    final sceneNum =
+        screenplay.scenes.indexWhere((s) => s.sceneId == sceneId) + 1;
 
     showDialog(
       context: context,
@@ -431,12 +454,13 @@ class ScreenplayCard extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            const Icon(Icons.edit, color: Color(0xFF8B5CF6)),
+            const Icon(Icons.edit, color: Color(0xFF0EA5E9)),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 '修改场景 $sceneNum 的视频提示词',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -456,12 +480,16 @@ class ScreenplayCard extends StatelessWidget {
                 children: [
                   const Text(
                     '场景旁白：',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF8E8E93)),
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF8E8E93)),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     narration,
-                    style: const TextStyle(fontSize: 13, color: Color(0xFF1C1C1E)),
+                    style:
+                        const TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
                   ),
                 ],
               ),
@@ -489,7 +517,8 @@ class ScreenplayCard extends StatelessWidget {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF8B5CF6), width: 2),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF0EA5E9), width: 2),
                 ),
               ),
               style: const TextStyle(fontSize: 13),
@@ -507,11 +536,15 @@ class ScreenplayCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.warning_amber_rounded, size: 14, color: Color(0xFFFF8F00)),
+                      Icon(Icons.warning_amber_rounded,
+                          size: 14, color: Color(0xFFFF8F00)),
                       SizedBox(width: 4),
                       Text(
                         '禁用词汇',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF8E8E93)),
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF8E8E93)),
                       ),
                     ],
                   ),
@@ -543,7 +576,7 @@ class ScreenplayCard extends StatelessWidget {
               }
             },
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF8B5CF6),
+              backgroundColor: const Color(0xFF0EA5E9),
             ),
             child: const Text('保存并重试'),
           ),
@@ -593,15 +626,16 @@ class _SceneCard extends StatelessWidget {
             children: [
               // 场景编号带渐变
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                    colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
                   ),
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                      color: const Color(0xFF0EA5E9).withOpacity(0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -628,7 +662,8 @@ class _SceneCard extends StatelessWidget {
                 ),
               ),
               // 🆕 pending 状态显示"开始生成"按钮
-              if (scene.status == SceneStatus.pending && onStartGeneration != null) ...[
+              if (scene.status == SceneStatus.pending &&
+                  onStartGeneration != null) ...[
                 Container(
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
@@ -649,15 +684,20 @@ class _SceneCard extends StatelessWidget {
                       onTap: onStartGeneration,
                       borderRadius: BorderRadius.circular(16),
                       child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.play_arrow, size: 14, color: Colors.white),
+                            Icon(Icons.play_arrow,
+                                size: 14, color: Colors.white),
                             SizedBox(width: 4),
                             Text(
                               '开始生成',
-                              style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -673,7 +713,8 @@ class _SceneCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFF8B5CF6).withOpacity(0.5)),
+                    border: Border.all(
+                        color: const Color(0xFF0EA5E9).withOpacity(0.5)),
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -681,15 +722,20 @@ class _SceneCard extends StatelessWidget {
                       onTap: onEditPrompt,
                       borderRadius: BorderRadius.circular(16),
                       child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.edit, size: 12, color: Color(0xFFA78BFA)),
+                            Icon(Icons.edit,
+                                size: 12, color: Color(0xFF3B82F6)),
                             SizedBox(width: 4),
                             Text(
                               '修改提示词',
-                              style: TextStyle(color: Color(0xFFA78BFA), fontSize: 11, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                  color: Color(0xFF3B82F6),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
@@ -717,7 +763,8 @@ class _SceneCard extends StatelessWidget {
                       onTap: onRetry,
                       borderRadius: BorderRadius.circular(16),
                       child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -725,7 +772,10 @@ class _SceneCard extends StatelessWidget {
                             SizedBox(width: 4),
                             Text(
                               '重试',
-                              style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -750,7 +800,8 @@ class _SceneCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.format_quote, size: 16, color: const Color(0xFFEC4899).withOpacity(0.8)),
+                Icon(Icons.format_quote,
+                    size: 16, color: const Color(0xFF06B6D4).withOpacity(0.8)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -789,7 +840,7 @@ class _SceneCard extends StatelessWidget {
       case SceneStatus.imageCompleted:
         return const Color(0xFF22D3EE);
       case SceneStatus.videoGenerating:
-        return const Color(0xFFA78BFA);
+        return const Color(0xFF3B82F6);
       case SceneStatus.completed:
         return const Color(0xFF34D399);
       case SceneStatus.failed:
@@ -811,20 +862,20 @@ class _SceneCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF8B5CF6).withOpacity(0.2),
+                color: const Color(0xFF0EA5E9).withOpacity(0.2),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.image, color: Color(0xFFA78BFA), size: 12),
+                  const Icon(Icons.image, color: Color(0xFF3B82F6), size: 12),
                   const SizedBox(width: 4),
                   const Text(
                     '分镜图',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFFA78BFA),
+                      color: Color(0xFF3B82F6),
                     ),
                   ),
                 ],
@@ -885,7 +936,8 @@ class _SceneCard extends StatelessWidget {
                       ),
                       child: Center(
                         child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.black.withOpacity(0.5),
                             borderRadius: BorderRadius.circular(20),
@@ -893,9 +945,12 @@ class _SceneCard extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.fullscreen, color: Colors.white, size: 16),
+                              Icon(Icons.fullscreen,
+                                  color: Colors.white, size: 16),
                               SizedBox(width: 4),
-                              Text('点击放大', style: TextStyle(color: Colors.white, fontSize: 12)),
+                              Text('点击放大',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 12)),
                             ],
                           ),
                         ),
@@ -922,14 +977,14 @@ class _SceneCard extends StatelessWidget {
             // 视频标签
             Row(
               children: [
-                const Icon(Icons.videocam, color: Color(0xFF8B5CF6), size: 14),
+                const Icon(Icons.videocam, color: Color(0xFF0EA5E9), size: 14),
                 const SizedBox(width: 4),
                 const Text(
                   '分镜视频',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF8B5CF6),
+                    color: Color(0xFF0EA5E9),
                   ),
                 ),
               ],
@@ -953,7 +1008,8 @@ class _SceneCard extends StatelessWidget {
                       ),
                       child: Center(
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.black.withOpacity(0.5),
                             borderRadius: BorderRadius.circular(20),
@@ -961,9 +1017,12 @@ class _SceneCard extends StatelessWidget {
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.fullscreen, color: Colors.white, size: 16),
+                              Icon(Icons.fullscreen,
+                                  color: Colors.white, size: 16),
                               SizedBox(width: 4),
-                              Text('点击全屏', style: TextStyle(color: Colors.white, fontSize: 12)),
+                              Text('点击全屏',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 12)),
                             ],
                           ),
                         ),
@@ -988,7 +1047,7 @@ class _SceneCard extends StatelessWidget {
           height: 60,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0xFFEC4899).withOpacity(0.1),
+            color: const Color(0xFF06B6D4).withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Center(
@@ -998,10 +1057,12 @@ class _SceneCard extends StatelessWidget {
                 SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(color: Color(0xFFEC4899), strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                      color: Color(0xFF06B6D4), strokeWidth: 2),
                 ),
                 SizedBox(height: 6),
-                Text('正在生成分镜视频...', style: TextStyle(color: Color(0xFFEC4899), fontSize: 12)),
+                Text('正在生成分镜视频...',
+                    style: TextStyle(color: Color(0xFF06B6D4), fontSize: 12)),
               ],
             ),
           ),
@@ -1016,7 +1077,7 @@ class _SceneCard extends StatelessWidget {
           height: 60,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0xFF8B5CF6).withOpacity(0.1),
+            color: const Color(0xFF0EA5E9).withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Center(
@@ -1026,10 +1087,12 @@ class _SceneCard extends StatelessWidget {
                 SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(color: Color(0xFF8B5CF6), strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                      color: Color(0xFF0EA5E9), strokeWidth: 2),
                 ),
                 SizedBox(height: 6),
-                Text('正在生成分镜图...', style: TextStyle(color: Color(0xFF8B5CF6), fontSize: 12)),
+                Text('正在生成分镜图...',
+                    style: TextStyle(color: Color(0xFF0EA5E9), fontSize: 12)),
               ],
             ),
           ),
@@ -1051,9 +1114,12 @@ class _SceneCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.image_not_supported, color: Colors.grey.shade400, size: 24),
+                Icon(Icons.image_not_supported,
+                    color: Colors.grey.shade400, size: 24),
                 SizedBox(height: 4),
-                Text('等待生成', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                Text('等待生成',
+                    style:
+                        TextStyle(color: Colors.grey.shade500, fontSize: 12)),
               ],
             ),
           ),
@@ -1186,7 +1252,8 @@ class _ImagePreviewDialog extends StatelessWidget {
                 SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
                 ),
                 SizedBox(width: 12),
                 Text('正在保存到相册...'),
@@ -1323,13 +1390,14 @@ class _PromptSectionState extends State<_PromptSection> {
   @override
   Widget build(BuildContext context) {
     final isDark = widget.isDarkTheme;
-    
+
     return Theme(
       data: Theme.of(context).copyWith(
         dividerColor: Colors.transparent,
         expansionTileTheme: ExpansionTileThemeData(
-          iconColor: isDark ? const Color(0xFFA78BFA) : const Color(0xFF8B5CF6),
-          collapsedIconColor: isDark ? const Color(0xFFA78BFA) : const Color(0xFF8B5CF6),
+          iconColor: isDark ? const Color(0xFF3B82F6) : const Color(0xFF0EA5E9),
+          collapsedIconColor:
+              isDark ? const Color(0xFF3B82F6) : const Color(0xFF0EA5E9),
         ),
       ),
       child: ExpansionTile(
@@ -1339,14 +1407,15 @@ class _PromptSectionState extends State<_PromptSection> {
             Icon(
               Icons.code,
               size: 14,
-              color: isDark ? const Color(0xFFA78BFA) : const Color(0xFF8B5CF6),
+              color: isDark ? const Color(0xFF3B82F6) : const Color(0xFF0EA5E9),
             ),
             const SizedBox(width: 6),
             Text(
               '查看提示词',
               style: TextStyle(
                 fontSize: 13,
-                color: isDark ? const Color(0xFFA78BFA) : const Color(0xFF8B5CF6),
+                color:
+                    isDark ? const Color(0xFF3B82F6) : const Color(0xFF0EA5E9),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -1357,9 +1426,13 @@ class _PromptSectionState extends State<_PromptSection> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDark ? Colors.black.withOpacity(0.2) : const Color(0xFFF2F2F7),
+              color: isDark
+                  ? Colors.black.withOpacity(0.2)
+                  : const Color(0xFFF2F2F7),
               borderRadius: BorderRadius.circular(10),
-              border: isDark ? Border.all(color: Colors.white.withOpacity(0.1)) : null,
+              border: isDark
+                  ? Border.all(color: Colors.white.withOpacity(0.1))
+                  : null,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1368,14 +1441,20 @@ class _PromptSectionState extends State<_PromptSection> {
                 if (widget.scene.characterDescription.isNotEmpty) ...[
                   Row(
                     children: [
-                      Icon(Icons.person, size: 14, color: isDark ? const Color(0xFFEC4899) : const Color(0xFF8B5CF6)),
+                      Icon(Icons.person,
+                          size: 14,
+                          color: isDark
+                              ? const Color(0xFF06B6D4)
+                              : const Color(0xFF0EA5E9)),
                       const SizedBox(width: 4),
                       Text(
                         '人物特征描述:',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? const Color(0xFFEC4899) : const Color(0xFF8B5CF6),
+                          color: isDark
+                              ? const Color(0xFF06B6D4)
+                              : const Color(0xFF0EA5E9),
                         ),
                       ),
                     ],
@@ -1385,7 +1464,9 @@ class _PromptSectionState extends State<_PromptSection> {
                     widget.scene.characterDescription,
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? Colors.white.withOpacity(0.6) : const Color(0xFF8E8E93),
+                      color: isDark
+                          ? Colors.white.withOpacity(0.6)
+                          : const Color(0xFF8E8E93),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1395,7 +1476,9 @@ class _PromptSectionState extends State<_PromptSection> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white.withOpacity(0.9) : const Color(0xFF1C1C1E),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.9)
+                        : const Color(0xFF0F172A),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1403,7 +1486,9 @@ class _PromptSectionState extends State<_PromptSection> {
                   widget.scene.imagePrompt,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDark ? Colors.white.withOpacity(0.6) : const Color(0xFF8E8E93),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.6)
+                        : const Color(0xFF8E8E93),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -1412,7 +1497,9 @@ class _PromptSectionState extends State<_PromptSection> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white.withOpacity(0.9) : const Color(0xFF1C1C1E),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.9)
+                        : const Color(0xFF0F172A),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1420,7 +1507,9 @@ class _PromptSectionState extends State<_PromptSection> {
                   widget.scene.videoPrompt,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDark ? Colors.white.withOpacity(0.6) : const Color(0xFF8E8E93),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.6)
+                        : const Color(0xFF8E8E93),
                   ),
                 ),
               ],
@@ -1539,7 +1628,8 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget>
                   SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white),
                   ),
                   SizedBox(width: 12),
                   Text('正在下载并保存...'),
@@ -1730,12 +1820,14 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget>
                       onTap: _copyVideoUrl,
                       borderRadius: BorderRadius.circular(20),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
                         margin: const EdgeInsets.only(bottom: 6),
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.6),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+                          border: Border.all(
+                              color: Colors.white.withOpacity(0.3), width: 1),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -1766,9 +1858,10 @@ class _VideoPlayerWidgetState extends State<_VideoPlayerWidget>
                       onTap: _saveVideoToGallery,
                       borderRadius: BorderRadius.circular(20),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEC4899).withOpacity(0.9),
+                          color: const Color(0xFF06B6D4).withOpacity(0.9),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Row(
@@ -1880,20 +1973,20 @@ class _FullScriptDialog extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.description, color: Color(0xFF8B5CF6)),
+                  const Icon(Icons.description, color: Color(0xFF0EA5E9)),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       screenplay.scriptTitle,
                       style: const TextStyle(
-                        color: Color(0xFF1C1C1E),
+                        color: Color(0xFF0F172A),
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Color(0xFF8B5CF6)),
+                    icon: const Icon(Icons.close, color: Color(0xFF0EA5E9)),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -1918,7 +2011,7 @@ class _FullScriptDialog extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF1C1C1E),
+                        color: Color(0xFF0F172A),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1975,7 +2068,7 @@ class _FullScriptDialog extends StatelessWidget {
             '$label: ',
             style: const TextStyle(
               fontWeight: FontWeight.w600,
-              color: Color(0xFF1C1C1E),
+              color: Color(0xFF0F172A),
             ),
           ),
           Text(value, style: const TextStyle(color: Color(0xFF8E8E93))),
@@ -2051,7 +2144,7 @@ class _SceneDetailCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6),
+                  color: const Color(0xFF0EA5E9),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -2115,7 +2208,7 @@ class _SceneDetailCard extends StatelessWidget {
           content,
           style: TextStyle(
             fontSize: isSmall ? 11 : 12,
-            color: const Color(0xFF1C1C1E),
+            color: const Color(0xFF0F172A),
             height: 1.4,
           ),
         ),
@@ -2128,11 +2221,11 @@ class _SceneDetailCard extends StatelessWidget {
       case SceneStatus.pending:
         return const Color(0xFF8E8E93);
       case SceneStatus.imageGenerating:
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFF0EA5E9);
       case SceneStatus.imageCompleted:
         return const Color(0xFF32ADE6);
       case SceneStatus.videoGenerating:
-        return const Color(0xFFEC4899);
+        return const Color(0xFF06B6D4);
       case SceneStatus.completed:
         return const Color(0xFF34C759);
       case SceneStatus.failed:

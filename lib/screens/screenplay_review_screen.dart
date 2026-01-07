@@ -53,7 +53,7 @@ class _ScreenplayReviewScreenState extends State<ScreenplayReviewScreen> {
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF1C1C1E),
+            color: Color(0xFF0F172A),
             letterSpacing: -0.5,
           ),
         ),
@@ -80,7 +80,7 @@ class _ScreenplayReviewScreenState extends State<ScreenplayReviewScreen> {
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
               ),
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF8B5CF6),
+                foregroundColor: const Color(0xFF0EA5E9),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
               ),
             ),
@@ -98,16 +98,27 @@ class _ScreenplayReviewScreenState extends State<ScreenplayReviewScreen> {
                 child: CustomScrollView(
                   slivers: [
                     // 剧本信息区域
-                    SliverToBoxAdapter(child: _buildDraftInfo(context, currentDraft)),
+                    SliverToBoxAdapter(
+                        child: _buildDraftInfo(context, currentDraft)),
 
                     // 分隔线 - 细线
-                    const SliverToBoxAdapter(child: Divider(height: 1, thickness: 0.5, color: Color(0xFFE5E7EB))),
+                    const SliverToBoxAdapter(
+                        child: Divider(
+                            height: 1,
+                            thickness: 0.5,
+                            color: Color(0xFFE5E7EB))),
 
                     // 角色设定区域（需要监听变化）
-                    SliverToBoxAdapter(child: _buildCharacterSheetsSection(context, currentDraft)),
+                    SliverToBoxAdapter(
+                        child: _buildCharacterSheetsSection(
+                            context, currentDraft)),
 
                     // 分隔线 - 细线
-                    const SliverToBoxAdapter(child: Divider(height: 1, thickness: 0.5, color: Color(0xFFE5E7EB))),
+                    const SliverToBoxAdapter(
+                        child: Divider(
+                            height: 1,
+                            thickness: 0.5,
+                            color: Color(0xFFE5E7EB))),
 
                     // 场景列表
                     SliverList(
@@ -119,23 +130,29 @@ class _ScreenplayReviewScreenState extends State<ScreenplayReviewScreen> {
                             totalScenes: currentDraft.scenes.length,
                             onNarrationChanged: (newNarration) {
                               final provider = context.read<ChatProvider>();
-                              provider.draftController.updateSceneNarration(scene.sceneId, newNarration);
+                              provider.draftController.updateSceneNarration(
+                                  scene.sceneId, newNarration);
                             },
                             onEmotionalHookChanged: (newHook) {
                               final provider = context.read<ChatProvider>();
-                              provider.draftController.updateSceneEmotionalHook(scene.sceneId, newHook);
+                              provider.draftController.updateSceneEmotionalHook(
+                                  scene.sceneId, newHook);
                             },
                             onCharacterDescriptionChanged: (newDesc) {
                               final provider = context.read<ChatProvider>();
-                              provider.draftController.updateSceneCharacterDescription(scene.sceneId, newDesc);
+                              provider.draftController
+                                  .updateSceneCharacterDescription(
+                                      scene.sceneId, newDesc);
                             },
                             onImagePromptChanged: (newPrompt) {
                               final provider = context.read<ChatProvider>();
-                              provider.draftController.updateSceneImagePrompt(scene.sceneId, newPrompt);
+                              provider.draftController.updateSceneImagePrompt(
+                                  scene.sceneId, newPrompt);
                             },
                             onVideoPromptChanged: (newPrompt) {
                               final provider = context.read<ChatProvider>();
-                              provider.draftController.updateSceneVideoPrompt(scene.sceneId, newPrompt);
+                              provider.draftController.updateSceneVideoPrompt(
+                                  scene.sceneId, newPrompt);
                             },
                             onRegenerate: widget.onRegenerate != null
                                 ? () => _handleRegenerateScene(scene.sceneId)
@@ -161,7 +178,6 @@ class _ScreenplayReviewScreenState extends State<ScreenplayReviewScreen> {
     );
   }
 
-
   /// 构建剧本信息区域
   Widget _buildDraftInfo(BuildContext context, ScreenplayDraft currentDraft) {
     return Container(
@@ -185,7 +201,8 @@ class _ScreenplayReviewScreenState extends State<ScreenplayReviewScreen> {
           // 标题行
           Row(
             children: [
-              const Icon(Icons.movie_creation, color: Color(0xFF8B5CF6), size: 20),
+              const Icon(Icons.movie_creation,
+                  color: Color(0xFF0EA5E9), size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -193,7 +210,7 @@ class _ScreenplayReviewScreenState extends State<ScreenplayReviewScreen> {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1C1C1E),
+                    color: Color(0xFF0F172A),
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -210,10 +227,16 @@ class _ScreenplayReviewScreenState extends State<ScreenplayReviewScreen> {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               _InfoPill(icon: Icons.category, label: currentDraft.genre),
-              _InfoPill(icon: Icons.schedule, label: '${currentDraft.estimatedDurationSeconds}秒'),
-              _InfoPill(icon: Icons.view_carousel, label: '${currentDraft.sceneCount}个场景'),
+              _InfoPill(
+                  icon: Icons.schedule,
+                  label: '${currentDraft.estimatedDurationSeconds}秒'),
+              _InfoPill(
+                  icon: Icons.view_carousel,
+                  label: '${currentDraft.sceneCount}个场景'),
               if (currentDraft.emotionalArc.isNotEmpty)
-                _InfoPill(icon: Icons.trending_up, label: currentDraft.emotionalArc.join('→')),
+                _InfoPill(
+                    icon: Icons.trending_up,
+                    label: currentDraft.emotionalArc.join('→')),
             ],
           ),
         ],
@@ -222,7 +245,8 @@ class _ScreenplayReviewScreenState extends State<ScreenplayReviewScreen> {
   }
 
   /// 构建角色设定区域
-  Widget _buildCharacterSheetsSection(BuildContext context, ScreenplayDraft currentDraft) {
+  Widget _buildCharacterSheetsSection(
+      BuildContext context, ScreenplayDraft currentDraft) {
     // 如果有角色设定表，显示角色列表
     // 如果没有，显示一个提示区域
     final hasCharacterSheets = currentDraft.hasCharacterSheets;
@@ -238,7 +262,7 @@ class _ScreenplayReviewScreenState extends State<ScreenplayReviewScreen> {
         ),
         child: const Row(
           children: [
-            Icon(Icons.info_outline, color: Color(0xFFEC4899), size: 16),
+            Icon(Icons.info_outline, color: Color(0xFF06B6D4), size: 16),
             SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -311,7 +335,8 @@ class _ScreenplayReviewScreenState extends State<ScreenplayReviewScreen> {
                 decoration: const InputDecoration(
                   hintText: '输入修改建议（可选）...',
                   hintStyle: TextStyle(fontSize: 14, color: Color(0xFF9CA3AF)),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   border: InputBorder.none,
                 ),
               ),
@@ -324,13 +349,17 @@ class _ScreenplayReviewScreenState extends State<ScreenplayReviewScreen> {
               height: 48,
               child: FilledButton.icon(
                 onPressed: _handleConfirm,
-                icon: const Icon(Icons.check_circle, size: 20, color: Colors.white),
+                icon: const Icon(Icons.check_circle,
+                    size: 20, color: Colors.white),
                 label: const Text(
                   '确认并继续生成',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white),
                 ),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF8B5CF6),
+                  backgroundColor: const Color(0xFF0EA5E9),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -450,20 +479,20 @@ class _InfoPill extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF8B5CF6).withOpacity(0.15),
-            const Color(0xFFEC4899).withOpacity(0.1),
+            const Color(0xFF0EA5E9).withOpacity(0.15),
+            const Color(0xFF06B6D4).withOpacity(0.1),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF8B5CF6).withOpacity(0.3),
+          color: const Color(0xFF0EA5E9).withOpacity(0.3),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF8B5CF6).withOpacity(0.1),
+            color: const Color(0xFF0EA5E9).withOpacity(0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -476,7 +505,7 @@ class _InfoPill extends StatelessWidget {
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
               ),
               borderRadius: BorderRadius.circular(6),
             ),
@@ -486,7 +515,7 @@ class _InfoPill extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              color: Color(0xFF1C1C1E),
+              color: Color(0xFF0F172A),
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
